@@ -40,6 +40,19 @@ async function updateNavForUser() {
     links.style.transition = 'opacity 0.15s';
     links.style.opacity = '1';
   }
+
+  if (window.matchMedia('(max-width: 768px)').matches) {
+    const btn = document.querySelector('.btn-nav');
+    if (btn) {
+      if (user) {
+        btn.textContent = 'Sell Gear';
+        btn.href = 'post.html';
+      } else {
+        btn.textContent = 'Buy / Sell Gear';
+        btn.href = 'browse.html';
+      }
+    }
+  }
 }
 
 async function requireAuth() {
