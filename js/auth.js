@@ -8,6 +8,7 @@ async function updateNavForUser() {
   const authLink = document.getElementById('nav-auth-link');
   const messagesLink = document.getElementById('nav-messages-link');
   if (!authLink) return;
+  const ordersLink = document.getElementById('nav-orders-link');
   if (user) {
     authLink.innerHTML = `<a href="account.html">My Account</a>`;
     if (messagesLink) {
@@ -21,9 +22,11 @@ async function updateNavForUser() {
       const badge = unreadCount > 0 ? ` <span class="nav-badge">${unreadCount}</span>` : '';
       messagesLink.innerHTML = `<a href="account.html#messages">Messages${badge}</a>`;
     }
+    if (ordersLink) ordersLink.style.display = 'list-item';
   } else {
     authLink.innerHTML = `<a href="auth.html">Sign In</a>`;
     if (messagesLink) messagesLink.style.display = 'none';
+    if (ordersLink) ordersLink.style.display = 'none';
   }
 }
 

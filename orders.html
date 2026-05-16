@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orders — Used Motorcycle Gear</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .orders-page { max-width: 860px; margin: 3rem auto; padding: 0 1.5rem; }
+    .orders-section-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid var(--text);
+    }
+    .order-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.25rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .order-row img, .order-thumb-placeholder {
+      width: 80px;
+      height: 60px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+    .order-info { flex: 1; }
+    .order-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.2rem; }
+    .order-price { font-size: 1rem; font-weight: 800; margin-bottom: 0.2rem; }
+    .order-meta { font-size: 0.82rem; color: var(--muted); }
+    .order-status {
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 0.3rem 0.75rem;
+      border-radius: 20px;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .status-pending   { background: #fff3cd; color: #856404; }
+    .status-paid      { background: #d1ecf1; color: #0c5460; }
+    .status-shipped   { background: #d4edda; color: #155724; }
+    .status-delivered { background: #d4edda; color: #155724; }
+    .status-complete  { background: #e2e3e5; color: #383d41; }
+    .status-disputed  { background: #f8d7da; color: #721c24; }
+    .tracking-note { font-size: 0.8rem; color: var(--success); margin-top: 0.3rem; font-weight: 600; }
+    .empty-orders { padding: 3rem 0; text-align: center; color: var(--muted); font-size: 0.95rem; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">used<span>motorcyclegear</span>.com</a>
+  <ul class="nav-links">
+    <li><a href="browse.html">Browse</a></li>
+    <li id="nav-auth-link"><a href="auth.html">Sign In</a></li>
+    <li id="nav-messages-link" style="display:none"><a href="account.html#messages">Messages</a></li>
+    <li id="nav-orders-link" style="display:none"><a href="orders.html">Orders</a></li>
+    <li><a href="post.html" class="btn-nav">+ Sell Gear</a></li>
+  </ul>
+</nav>
+
+<div class="orders-page">
+  <div id="orders-content"><div class="loading">Loading...</div></div>
+</div>
+
+<footer>&copy; 2026 usedmotorcyclegear.com — Ride safe.</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  async function load() {
+    const user = await requireAuth();
+    const container = document.getElementById('orders-content');
+
+    const [{ data: purchases }, { data: sales }] = await Promise.all([
+      supabase.from('orders').select('*, listings(title, images)').eq('buyer_id', user.id).order('created_at', { ascending: false }),
+      supabase.from('orders').select('*, listings(title, images)').eq('seller_id', user.id).order('created_at', { ascending: false })
+    ]);
+
+    const hasPurchases = purchases && purchases.length > 0;
+    const hasSales = sales && sales.length > 0;
+
+    if (!hasPurchases && !hasSales) {
+      container.innerHTML = `<div class="empty-orders"><p>No orders yet.</p><a href="browse.html" class="btn btn-primary" style="margin-top:1rem; display:inline-block;">Browse Gear</a></div>`;
+      return;
+    }
+
+    let html = '';
+
+    if (hasPurchases) {
+      html += `<section style="margin-bottom:3rem;">
+        <div class="orders-section-title">My Orders</div>
+        ${purchases.map(order => orderRow(order, 'purchase')).join('')}
+      </section>`;
+    }
+
+    if (hasSales) {
+      html += `<section>
+        <div class="orders-section-title">My Sales</div>
+        ${sales.map(order => orderRow(order, 'sale')).join('')}
+      </section>`;
+    }
+
+    container.innerHTML = html;
+  }
+
+  function orderRow(order, type) {
+    const img = order.listings?.images?.[0];
+    const title = order.listings?.title || 'Item';
+    const amount = type === 'sale'
+      ? `You receive: $${Number(order.seller_payout).toLocaleString()}`
+      : `$${Number(order.amount).toLocaleString()}`;
+    const statusClass = {
+      pending_payment: 'status-pending',
+      paid:            'status-paid',
+      shipped:         'status-shipped',
+      delivered:       'status-delivered',
+      complete:        'status-complete',
+      disputed:        'status-disputed'
+    }[order.status] || 'status-pending';
+    const statusLabel = {
+      pending_payment: 'Awaiting Payment',
+      paid:            'Paid',
+      shipped:         'Shipped',
+      delivered:       'Delivered',
+      complete:        'Complete',
+      disputed:        'Disputed'
+    }[order.status] || order.status;
+
+    const tracking = order.tracking_number
+      ? `<div class="tracking-note">Tracking: ${order.tracking_number}</div>`
+      : '';
+    const date = new Date(order.created_at).toLocaleDateString();
+
+    return `
+      <div class="order-row">
+        ${img
+          ? `<img src="${img}" alt="${title}" />`
+          : `<div class="order-thumb-placeholder">🏍️</div>`}
+        <div class="order-info">
+          <div class="order-title">${title}</div>
+          <div class="order-price">${amount}</div>
+          <div class="order-meta">${date}</div>
+          ${tracking}
+        </div>
+        <span class="order-status ${statusClass}">${statusLabel}</span>
+      </div>`;
+  }
+
+  load();
+</script>
+</body>
+</html>
