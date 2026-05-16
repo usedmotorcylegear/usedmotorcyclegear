@@ -186,7 +186,8 @@ nav.nav-open .nav-hamburger span:nth-child(3) { transform: translateY(-7px) rota
 
 .subnav-link:hover,
 .subnav-link:focus,
-.subnav-link:active {
+.subnav-link:active,
+.subnav-link.active {
   color: var(--text);
   font-weight: 700;
   border: none !important;
