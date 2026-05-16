@@ -43,14 +43,16 @@ updateNavForUser();
 (function randomizeNavBtn() {
   const btn = document.querySelector('.btn-nav');
   if (!btn) return;
+  const li = btn.parentElement;
+  li.classList.add('nav-dropdown');
+  const menu = document.createElement('ul');
+  menu.className = 'nav-dropdown-menu';
   if (Math.random() < 0.5) {
     btn.textContent = '+ Buy Gear';
     btn.href = 'browse.html';
-    const li = btn.parentElement;
-    li.classList.add('nav-dropdown');
-    const menu = document.createElement('ul');
-    menu.className = 'nav-dropdown-menu';
     menu.innerHTML = '<li><a href="post.html">+ Sell Gear</a></li>';
-    li.appendChild(menu);
+  } else {
+    menu.innerHTML = '<li><a href="browse.html">+ Buy Gear</a></li>';
   }
+  li.appendChild(menu);
 })();
