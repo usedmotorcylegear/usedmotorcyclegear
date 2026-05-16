@@ -443,7 +443,7 @@ select.filter-select:focus { outline: none; border-color: var(--text); }
   .hero-actions .btn { padding: 0.75rem 1.25rem; font-size: 0.9rem; }
 
   /* LISTINGS */
-  .listings-section { padding: 0 1.25rem 2.5rem; }
+  .listings-section { padding: 2rem 1.25rem 2.5rem; }
   .listings-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
 
   /* BROWSE */
