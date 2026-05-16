@@ -26,7 +26,7 @@ async function updateNavForUser() {
         .eq('read', false);
       const unreadCount = unread ? unread.length : 0;
       const badge = unreadCount > 0 ? ` <span class="nav-badge">${unreadCount}</span>` : '';
-      messagesLink.innerHTML = `<a href="account.html#messages">Messages${badge}</a>`;
+      messagesLink.innerHTML = `<a href="inbox.html">Messages${badge}</a>`;
     }
     if (ordersLink) ordersLink.style.display = 'list-item';
   } else {
