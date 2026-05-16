@@ -417,6 +417,8 @@ select.filter-select:focus { outline: none; border-color: var(--text); }
     border-radius: 4px;
     padding: 0.75rem;
     border-bottom: none !important;
+    background: var(--primary);
+    color: #fff;
   }
   .nav-dropdown-menu { display: none !important; }
 
