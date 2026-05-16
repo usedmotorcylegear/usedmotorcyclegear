@@ -195,6 +195,10 @@ nav {
 .hero {
   background: #ffffff;
   padding: 2rem 3rem 1.75rem;
+  min-height: calc(100vh - 80px - 52px - 110px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .hero-inner {
@@ -232,7 +236,7 @@ nav {
 
 /* LISTINGS GRID */
 .listings-section {
-  padding: 2rem 3rem 4rem;
+  padding: 0 3rem 4rem;
 }
 
 .section-title {
@@ -347,8 +351,8 @@ select.filter-select:focus { outline: none; border-color: var(--text); }
   .listing-detail-grid { grid-template-columns: 1fr; gap: 2rem; }
   nav { padding: 0 1.5rem; height: 64px; }
   .subnav { padding: 0 1.5rem; }
-  .hero { padding: 4rem 1.5rem 3rem; }
-  .listings-section, .browse-layout { padding: 2rem 1.5rem; }
+  .hero { padding: 2rem 1.5rem 1.75rem; min-height: calc(100vh - 64px - 52px - 90px); }
+  .listings-section, .browse-layout { padding: 0 1.5rem 2rem; }
   .listing-detail { padding: 0 1.5rem; }
 }
 
