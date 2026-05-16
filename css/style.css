@@ -222,7 +222,7 @@ nav.nav-open .nav-hamburger span:nth-child(3) { transform: translateY(-7px) rota
 .hero {
   background:
     linear-gradient(rgba(0,0,0,0.52), rgba(0,0,0,0.52)),
-    url('https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=1800&q=80')
+    url('https://images.unsplash.com/photo-1716741011671-db4d7c6a8293?auto=format&fit=crop&w=1800&q=80')
     center / cover no-repeat;
   padding: 3rem 3rem 3.5rem;
   min-height: clamp(280px, calc(100vh - 240px), 480px);
