@@ -1,3 +1,9 @@
+// Hide nav links immediately so they don't flash in mid-update
+(function() {
+  const links = document.querySelector('.nav-links');
+  if (links) links.style.opacity = '0';
+})();
+
 async function getUser() {
   const { data: { user } } = await supabase.auth.getUser();
   return user;
@@ -27,6 +33,12 @@ async function updateNavForUser() {
     authLink.innerHTML = `<a href="auth.html">Sign In</a>`;
     if (messagesLink) messagesLink.style.display = 'none';
     if (ordersLink) ordersLink.style.display = 'none';
+  }
+
+  const links = document.querySelector('.nav-links');
+  if (links) {
+    links.style.transition = 'opacity 0.15s';
+    links.style.opacity = '1';
   }
 }
 
