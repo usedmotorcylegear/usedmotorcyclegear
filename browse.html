@@ -23,19 +23,20 @@
   </button>
 </nav>
 
+<div class="subnav">
+  <a href="browse.html?category=Jackets" class="subnav-link">Jackets</a>
+  <a href="browse.html?category=Gloves" class="subnav-link">Gloves</a>
+  <a href="browse.html?category=Boots" class="subnav-link">Boots</a>
+  <a href="browse.html?category=Pants" class="subnav-link">Pants</a>
+  <a href="browse.html?category=Full Suits" class="subnav-link">Full Suits</a>
+  <a href="browse.html?category=Body Armor" class="subnav-link">Body Armor</a>
+  <a href="browse.html?category=Luggage & Accessories" class="subnav-link">Luggage & Accessories</a>
+  <a href="browse.html" class="subnav-link">View All</a>
+</div>
 
 <div class="browse-layout">
   <div class="browse-header">
     <input type="text" class="search-bar" id="search" placeholder="Search listings..." />
-    <select class="filter-select" id="category-filter">
-      <option value="">All Categories</option>
-      <option>Jackets</option>
-      <option>Gloves</option>
-      <option>Boots</option>
-      <option>Pants</option>
-      <option>Body Armor</option>
-      <option>Luggage & Accessories</option>
-    </select>
     <select class="filter-select" id="sort-filter">
       <option value="created_at">Newest First</option>
       <option value="price_asc">Price: Low to High</option>
@@ -58,13 +59,9 @@
 <script src="js/auth.js"></script>
 <script>
   const params = new URLSearchParams(window.location.search);
-  const categoryFilter = document.getElementById('category-filter');
+  const categoryParam = params.get('category') || '';
   const sortFilter = document.getElementById('sort-filter');
   const searchInput = document.getElementById('search');
-
-  if (params.get('category')) {
-    categoryFilter.value = params.get('category');
-  }
 
   let debounceTimer;
 
@@ -73,7 +70,7 @@
     const count = document.getElementById('results-count');
     grid.innerHTML = '<div class="loading">Loading...</div>';
 
-    const category = categoryFilter.value;
+    const category = categoryParam;
     const sort = sortFilter.value;
     const search = searchInput.value.trim();
 
@@ -122,7 +119,6 @@
     `).join('');
   }
 
-  categoryFilter.addEventListener('change', loadListings);
   sortFilter.addEventListener('change', loadListings);
   searchInput.addEventListener('input', () => {
     clearTimeout(debounceTimer);
