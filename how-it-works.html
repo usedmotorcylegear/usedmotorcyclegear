@@ -6,64 +6,124 @@
   <title>How It Works — Used Motorcycle Gear</title>
   <link rel="stylesheet" href="css/style.css" />
   <style>
-    .hiw-page { max-width: 860px; margin: 0 auto; padding: 4rem 2rem 6rem; }
+    .hiw-page { max-width: 900px; margin: 0 auto; padding: 0 2rem 6rem; }
 
-    .hiw-hero { text-align: center; margin-bottom: 5rem; }
-    .hiw-hero h1 { font-size: 2.6rem; font-weight: 900; letter-spacing: -0.04em; margin-bottom: 1rem; }
-    .hiw-hero p { font-size: 1.1rem; color: var(--muted); max-width: 540px; margin: 0 auto; line-height: 1.7; }
-
-    .hiw-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem 4rem; margin-bottom: 5rem; }
-    @media (max-width: 640px) { .hiw-grid { grid-template-columns: 1fr; } }
-
-    .hiw-col-title {
-      font-size: 0.78rem;
-      font-weight: 800;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--primary);
-      margin-bottom: 2rem;
-      padding-bottom: 0.75rem;
-      border-bottom: 2px solid var(--primary);
-      display: inline-block;
-    }
-
-    .hiw-step { display: flex; gap: 1.25rem; margin-bottom: 2rem; }
-    .hiw-step-num {
-      width: 32px;
-      height: 32px;
+    /* PITCH BANNER */
+    .pitch-banner {
       background: var(--text);
       color: #fff;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.85rem;
-      font-weight: 800;
-      flex-shrink: 0;
-      margin-top: 2px;
+      padding: 3.5rem 3rem;
+      margin-bottom: 5rem;
     }
-    .hiw-step-body h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.3rem; }
-    .hiw-step-body p { font-size: 0.9rem; color: var(--muted); line-height: 1.6; }
+    .pitch-banner .eyebrow {
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--primary);
+      margin-bottom: 1rem;
+    }
+    .pitch-banner h1 {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 1.5rem;
+      max-width: 620px;
+    }
+    .pitch-banner h1 em {
+      font-style: normal;
+      color: var(--primary);
+    }
+    .pitch-banner p {
+      font-size: 1rem;
+      line-height: 1.75;
+      color: #c8c2bb;
+      max-width: 560px;
+    }
+    .pitch-banner p + p { margin-top: 0.85rem; }
 
-    .hiw-trust {
+    /* HOW IT WORKS SECTION */
+    .hiw-label {
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 2.5rem;
+    }
+
+    .hiw-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-bottom: 5rem; border: 1px solid var(--border); }
+    @media (max-width: 640px) { .hiw-cols { grid-template-columns: 1fr; } }
+
+    .hiw-col { padding: 2.5rem; }
+    .hiw-col:first-child { border-right: 1px solid var(--border); }
+    @media (max-width: 640px) { .hiw-col:first-child { border-right: none; border-bottom: 1px solid var(--border); } }
+
+    .hiw-col-heading {
+      font-size: 1.1rem;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--text);
+    }
+
+    .hiw-step {
+      display: flex;
+      gap: 1rem;
+      padding: 1.1rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .hiw-step:last-child { border-bottom: none; }
+
+    .hiw-num {
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: var(--muted);
+      width: 20px;
+      flex-shrink: 0;
+      padding-top: 3px;
+    }
+    .hiw-step h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.25rem; }
+    .hiw-step p { font-size: 0.875rem; color: var(--muted); line-height: 1.6; }
+
+    /* RULES SECTION */
+    .hiw-rules {
+      border-top: 2px solid var(--text);
+      padding-top: 2.5rem;
+      margin-bottom: 5rem;
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 3rem;
+    }
+    @media (max-width: 640px) { .hiw-rules { grid-template-columns: 1fr; gap: 1.5rem; } }
+    .hiw-rules-label { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); padding-top: 4px; }
+    .hiw-rule {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+      align-items: flex-start;
+    }
+    .hiw-rule:last-child { margin-bottom: 0; }
+    .hiw-rule-dash { color: var(--primary); font-weight: 900; flex-shrink: 0; margin-top: 1px; }
+    .hiw-rule p { font-size: 0.9rem; line-height: 1.6; color: var(--text); }
+    .hiw-rule strong { font-weight: 700; }
+
+    /* CTA */
+    .hiw-cta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      padding: 2.5rem;
       background: var(--bg);
       border: 1px solid var(--border);
-      padding: 2.5rem;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 2rem;
-      text-align: center;
-      margin-bottom: 4rem;
     }
-    @media (max-width: 640px) { .hiw-trust { grid-template-columns: 1fr; } }
-    .trust-item-icon { font-size: 1.75rem; margin-bottom: 0.6rem; }
-    .trust-item-title { font-weight: 800; font-size: 0.95rem; margin-bottom: 0.3rem; }
-    .trust-item-desc { font-size: 0.83rem; color: var(--muted); line-height: 1.5; }
-
-    .hiw-cta { text-align: center; }
-    .hiw-cta h2 { font-size: 1.8rem; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 0.75rem; }
-    .hiw-cta p { color: var(--muted); margin-bottom: 1.75rem; }
-    .hiw-cta-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .hiw-cta-text h2 { font-size: 1.4rem; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 0.3rem; }
+    .hiw-cta-text p { font-size: 0.9rem; color: var(--muted); }
+    .hiw-cta-btns { display: flex; gap: 0.75rem; flex-wrap: wrap; }
   </style>
 </head>
 <body>
@@ -82,108 +142,116 @@
 
 <div class="hiw-page">
 
-  <div class="hiw-hero">
-    <h1>Buy and sell used riding gear,<br>the right way.</h1>
-    <p>A marketplace built for riders. Every transaction is protected — no sketchy meetups, no Venmo disputes, no ghosted sellers.</p>
+  <div class="pitch-banner">
+    <div class="eyebrow">Our standard</div>
+    <h1>We only sell gear that's<br>never been <em>crashed in.</em></h1>
+    <p>A helmet that's taken a hit looks the same on the outside. Inside, the foam has already done its job — once. It won't do it again. Same goes for a jacket that's been laid down, armor that's absorbed an impact, or boots that went through the pavement.</p>
+    <p>Every seller on this platform agrees to one rule: list only gear that has never been in an accident. That means gear you outgrew, gear you upgraded from, gear that just sat in the garage. Not gear that saved your life — keep that one for yourself.</p>
   </div>
 
-  <div class="hiw-grid">
+  <div class="hiw-label">How it works</div>
 
-    <div>
-      <div class="hiw-col-title">For Buyers</div>
+  <div class="hiw-cols">
+    <div class="hiw-col">
+      <div class="hiw-col-heading">Buying gear</div>
 
       <div class="hiw-step">
-        <div class="hiw-step-num">1</div>
-        <div class="hiw-step-body">
-          <h3>Find your gear</h3>
-          <p>Browse listings by category, condition, and location. Every listing includes photos, a full description, and the seller's location.</p>
+        <div class="hiw-num">01</div>
+        <div>
+          <h3>Browse and find what you need</h3>
+          <p>Filter by category, condition, and location. Message the seller if you have questions before committing.</p>
         </div>
       </div>
 
       <div class="hiw-step">
-        <div class="hiw-step-num">2</div>
-        <div class="hiw-step-body">
-          <h3>Buy or make an offer</h3>
-          <p>Pay the asking price instantly or submit an offer. If the seller accepts, you'll get a checkout link sent directly to your messages.</p>
+        <div class="hiw-num">02</div>
+        <div>
+          <h3>Buy outright or make an offer</h3>
+          <p>Hit Buy Now to pay the listed price, or submit a lower offer. Sellers can accept, decline, or counter.</p>
         </div>
       </div>
 
       <div class="hiw-step">
-        <div class="hiw-step-num">3</div>
-        <div class="hiw-step-body">
-          <h3>Pay securely via Stripe</h3>
-          <p>Your payment is held in escrow — the seller doesn't receive a dime until after you've had time to confirm the item arrived as described.</p>
+        <div class="hiw-num">03</div>
+        <div>
+          <h3>Pay through Stripe</h3>
+          <p>Your money goes into escrow — not to the seller. They can't touch it until after you've received the item.</p>
         </div>
       </div>
 
       <div class="hiw-step">
-        <div class="hiw-step-num">4</div>
-        <div class="hiw-step-body">
-          <h3>Receive your gear</h3>
-          <p>Once the seller ships and enters a tracking number, funds are released 3 days after confirmed delivery — giving you a window to flag any issues.</p>
-        </div>
-      </div>
-    </div>
-
-    <div>
-      <div class="hiw-col-title">For Sellers</div>
-
-      <div class="hiw-step">
-        <div class="hiw-step-num">1</div>
-        <div class="hiw-step-body">
-          <h3>Post your listing for free</h3>
-          <p>Upload photos, write a description, set your price. Takes less than 5 minutes. Your listing goes live immediately.</p>
-        </div>
-      </div>
-
-      <div class="hiw-step">
-        <div class="hiw-step-num">2</div>
-        <div class="hiw-step-body">
-          <h3>Get buyers through the site</h3>
-          <p>Buyers can message you, make offers, or buy outright. All communication stays on-platform — your contact info stays private.</p>
-        </div>
-      </div>
-
-      <div class="hiw-step">
-        <div class="hiw-step-num">3</div>
-        <div class="hiw-step-body">
-          <h3>Ship it and enter tracking</h3>
-          <p>Once paid, pack up the gear, ship it, and enter the tracking number in your Orders page. That starts the 3-day delivery clock.</p>
-        </div>
-      </div>
-
-      <div class="hiw-step">
-        <div class="hiw-step-num">4</div>
-        <div class="hiw-step-body">
-          <h3>Get paid</h3>
-          <p>After the 3-day window closes with no disputes, your payout is released. A 13.33% platform fee covers payment processing and buyer protection.</p>
+        <div class="hiw-num">04</div>
+        <div>
+          <h3>Get your gear, then funds release</h3>
+          <p>Once delivered, you have 3 days to flag any issues. After that the seller gets paid. No disputes, no drama.</p>
         </div>
       </div>
     </div>
 
+    <div class="hiw-col">
+      <div class="hiw-col-heading">Selling gear</div>
+
+      <div class="hiw-step">
+        <div class="hiw-num">01</div>
+        <div>
+          <h3>Post your listing — it's free</h3>
+          <p>Upload a few photos, describe the item honestly, set your price. Takes 5 minutes and goes live immediately.</p>
+        </div>
+      </div>
+
+      <div class="hiw-step">
+        <div class="hiw-num">02</div>
+        <div>
+          <h3>Talk to buyers on-platform</h3>
+          <p>All messages happen through the site. Your phone number and email stay private the whole time.</p>
+        </div>
+      </div>
+
+      <div class="hiw-step">
+        <div class="hiw-num">03</div>
+        <div>
+          <h3>Ship it and enter your tracking</h3>
+          <p>Once a buyer pays, pack it up and ship it. Enter the tracking number in your Orders page to start the clock.</p>
+        </div>
+      </div>
+
+      <div class="hiw-step">
+        <div class="hiw-num">04</div>
+        <div>
+          <h3>Get paid after delivery</h3>
+          <p>3 days after confirmed delivery, your payout releases. We take 13.33% to cover Stripe fees and buyer protection.</p>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="hiw-trust">
-    <div class="trust-item">
-      <div class="trust-item-icon">🔒</div>
-      <div class="trust-item-title">Secure payments</div>
-      <div class="trust-item-desc">All payments processed by Stripe. Your card info never touches our servers.</div>
-    </div>
-    <div class="trust-item">
-      <div class="trust-item-icon">📦</div>
-      <div class="trust-item-title">3-day buyer protection</div>
-      <div class="trust-item-desc">Funds held after delivery so you have time to verify the gear matches the listing.</div>
-    </div>
-    <div class="trust-item">
-      <div class="trust-item-icon">💬</div>
-      <div class="trust-item-title">On-site messaging</div>
-      <div class="trust-item-desc">Contact sellers directly through the platform. No phone numbers, no spam.</div>
+  <div class="hiw-rules">
+    <div class="hiw-rules-label">The ground rules</div>
+    <div>
+      <div class="hiw-rule">
+        <div class="hiw-rule-dash">—</div>
+        <p><strong>No crashed gear, ever.</strong> If it's been down, it's done. Don't list it here. We trust sellers to be honest about this — and buyers can flag listings that seem off.</p>
+      </div>
+      <div class="hiw-rule">
+        <div class="hiw-rule-dash">—</div>
+        <p><strong>Photos have to be real.</strong> No stock images, no manufacturer photos. Snap a few shots of the actual item before you list it.</p>
+      </div>
+      <div class="hiw-rule">
+        <div class="hiw-rule-dash">—</div>
+        <p><strong>Describe it accurately.</strong> Scuffs, worn stitching, faded panels — mention it. Buyers appreciate honesty and it keeps disputes off your plate.</p>
+      </div>
+      <div class="hiw-rule">
+        <div class="hiw-rule-dash">—</div>
+        <p><strong>Keep it on the platform.</strong> Taking payments outside the site voids buyer protection for both parties. Not worth it.</p>
+      </div>
     </div>
   </div>
 
   <div class="hiw-cta">
-    <h2>Ready to ride?</h2>
-    <p>Browse hundreds of listings or post your gear in minutes.</p>
+    <div class="hiw-cta-text">
+      <h2>Good gear changes hands here.</h2>
+      <p>Browse what's listed or put your unused gear to work.</p>
+    </div>
     <div class="hiw-cta-btns">
       <a href="browse.html" class="btn btn-dark">Browse Listings</a>
       <a href="post.html" class="btn btn-outline">Sell Your Gear</a>
