@@ -15,6 +15,9 @@
     <li><a href="how-it-works.html">How It Works</a></li>
     <li><a href="post.html" class="btn-nav">+ Sell Gear</a></li>
   </ul>
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
 </nav>
 
 <div class="form-page">
@@ -113,6 +116,14 @@
       window.location.href = nextPage;
     }
   });
+
+  (function() {
+    const hamburger = document.getElementById('nav-hamburger');
+    if (!hamburger) return;
+    const nav = document.querySelector('nav');
+    hamburger.addEventListener('click', function(e) { e.stopPropagation(); nav.classList.toggle('nav-open'); });
+    document.addEventListener('click', function(e) { if (!nav.contains(e.target)) nav.classList.remove('nav-open'); });
+  })();
 
   document.getElementById('signup-form').addEventListener('submit', async (e) => {
     e.preventDefault();

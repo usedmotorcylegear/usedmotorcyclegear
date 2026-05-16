@@ -52,6 +52,27 @@ async function requireAuth() {
 
 updateNavForUser();
 
+// Hamburger menu toggle
+(function() {
+  const hamburger = document.getElementById('nav-hamburger');
+  if (!hamburger) return;
+  const nav = document.querySelector('nav');
+  hamburger.addEventListener('click', function(e) {
+    e.stopPropagation();
+    nav.classList.toggle('nav-open');
+  });
+  document.addEventListener('click', function(e) {
+    if (nav.classList.contains('nav-open') && !nav.contains(e.target)) {
+      nav.classList.remove('nav-open');
+    }
+  });
+  document.querySelectorAll('.nav-links a').forEach(function(link) {
+    link.addEventListener('click', function() {
+      nav.classList.remove('nav-open');
+    });
+  });
+})();
+
 (function randomizeNavBtn() {
   const btn = document.querySelector('.btn-nav');
   if (!btn) return;
