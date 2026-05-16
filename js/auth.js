@@ -46,5 +46,11 @@ updateNavForUser();
   if (Math.random() < 0.5) {
     btn.textContent = '+ Buy Gear';
     btn.href = 'browse.html';
+    const li = btn.parentElement;
+    li.classList.add('nav-dropdown');
+    const menu = document.createElement('ul');
+    menu.className = 'nav-dropdown-menu';
+    menu.innerHTML = '<li><a href="post.html">+ Sell Gear</a></li>';
+    li.appendChild(menu);
   }
 })();
