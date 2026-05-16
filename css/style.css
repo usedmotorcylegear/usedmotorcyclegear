@@ -55,11 +55,14 @@ nav {
 .nav-links a {
   color: var(--muted);
   font-size: 1rem;
-  transition: color 0.15s, font-weight 0.1s;
-  text-decoration: none;
+  transition: color 0.15s, text-shadow 0.1s;
+  text-decoration: none !important;
 }
 
-.nav-links a:hover { color: var(--text); font-weight: 700; }
+.nav-links a:hover {
+  color: var(--text);
+  text-shadow: 0 0 0.6px var(--text), 0 0 0.6px var(--text);
+}
 
 .nav-links .btn-nav {
   background: var(--text);
