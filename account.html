@@ -22,7 +22,11 @@
   <div class="account-grid">
 
     <div class="account-sidebar">
-      <div class="account-avatar" id="avatar-initials">?</div>
+      <div class="account-avatar" id="avatar-initials" onclick="document.getElementById('avatar-file-input').click()" title="Change photo">
+        <span id="avatar-initial-text">?</span>
+        <div class="avatar-overlay">Change</div>
+      </div>
+      <input type="file" id="avatar-file-input" accept="image/*" style="display:none" onchange="uploadAvatar(this)" />
       <div class="account-username" id="sidebar-name">Loading...</div>
       <div class="account-email" id="sidebar-email"></div>
       <ul class="sidebar-links">
@@ -126,7 +130,7 @@
     if (profile) {
       const name = profile.full_name || profile.username || currentUser.email;
       document.getElementById('sidebar-name').textContent = name;
-      document.getElementById('avatar-initials').textContent = name.charAt(0).toUpperCase();
+      setAvatar(profile.avatar_url, name);
       document.getElementById('full-name').value = profile.full_name || '';
       document.getElementById('username').value = profile.username || '';
       document.getElementById('profile-location').value = profile.location || '';
@@ -139,6 +143,53 @@
     loadSales();
     loadOffersReceived();
     loadMyOffers();
+  }
+
+  function setAvatar(url, name) {
+    const el = document.getElementById('avatar-initials');
+    const initialText = document.getElementById('avatar-initial-text');
+    if (url) {
+      initialText.style.display = 'none';
+      const img = document.createElement('img');
+      img.src = url;
+      img.alt = name;
+      el.insertBefore(img, el.querySelector('.avatar-overlay'));
+    } else {
+      initialText.textContent = name ? name.charAt(0).toUpperCase() : '?';
+    }
+  }
+
+  async function uploadAvatar(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const alertEl = document.getElementById('profile-alert');
+    alertEl.innerHTML = '<div class="alert" style="background:var(--bg);border:1px solid var(--border);padding:0.6rem 1rem;font-size:0.875rem;">Uploading photo...</div>';
+
+    const ext = file.name.split('.').pop();
+    const path = `${currentUser.id}/avatar.${ext}`;
+    const { error: upErr } = await supabase.storage.from('avatars').upload(path, file, { upsert: true });
+    if (upErr) {
+      alertEl.innerHTML = `<div class="alert alert-error">Upload failed: ${upErr.message}</div>`;
+      return;
+    }
+
+    const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
+    const { error: dbErr } = await supabase.from('profiles').upsert({ id: currentUser.id, avatar_url: publicUrl });
+    if (dbErr) {
+      alertEl.innerHTML = `<div class="alert alert-error">Failed to save photo.</div>`;
+      return;
+    }
+
+    const el = document.getElementById('avatar-initials');
+    const existing = el.querySelector('img');
+    if (existing) existing.remove();
+    document.getElementById('avatar-initial-text').style.display = 'none';
+    const img = document.createElement('img');
+    img.src = publicUrl + '?t=' + Date.now();
+    img.alt = 'Profile photo';
+    el.insertBefore(img, el.querySelector('.avatar-overlay'));
+    alertEl.innerHTML = '<div class="alert alert-success">Profile photo updated!</div>';
+    input.value = '';
   }
 
   async function loadMyListings() {

@@ -109,8 +109,17 @@
             <span class="badge">${listing.condition}</span>
 
             <h3 style="margin-bottom:0.75rem; font-size:0.85rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em;">Seller</h3>
-            <div class="seller-name">${profile?.full_name || profile?.username || 'Anonymous'}</div>
-            <div class="seller-location">${profile?.location || listing.location || ''}</div>
+            <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.5rem;">
+              <div class="seller-avatar">
+                ${profile?.avatar_url
+                  ? `<img src="${profile.avatar_url}" alt="${profile?.full_name || 'Seller'}" />`
+                  : `${(profile?.full_name || profile?.username || '?').charAt(0).toUpperCase()}`}
+              </div>
+              <div>
+                <div class="seller-name" style="margin-bottom:0;">${profile?.full_name || profile?.username || 'Anonymous'}</div>
+                <div class="seller-location">${profile?.location || listing.location || ''}</div>
+              </div>
+            </div>
 
             <div id="contact-section"></div>
           </div>
