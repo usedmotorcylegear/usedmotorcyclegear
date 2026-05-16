@@ -12,12 +12,13 @@ async function updateNavForUser() {
     authLink.innerHTML = `<a href="account.html">My Account</a>`;
     if (messagesLink) {
       messagesLink.style.display = 'list-item';
-      const { count } = await supabase
+      const { data: unread } = await supabase
         .from('messages')
-        .select('*', { count: 'exact', head: true })
+        .select('id')
         .eq('recipient_id', user.id)
         .eq('read', false);
-      const badge = count > 0 ? ` <span class="nav-badge">${count}</span>` : '';
+      const unreadCount = unread ? unread.length : 0;
+      const badge = unreadCount > 0 ? ` <span class="nav-badge">${unreadCount}</span>` : '';
       messagesLink.innerHTML = `<a href="account.html#messages">Messages${badge}</a>`;
     }
   } else {

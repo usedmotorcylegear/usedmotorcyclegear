@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Messages — Used Motorcycle Gear</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .conversation-page { max-width: 700px; margin: 3rem auto; padding: 0 2rem; }
+    .conversation-header { margin-bottom: 1.5rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--border); }
+    .conversation-header h2 { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.25rem; }
+    .conversation-header a { font-size: 0.85rem; color: var(--primary); }
+    .message-thread { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem; }
+    .message-bubble { max-width: 80%; padding: 0.85rem 1.1rem; border-radius: 2px; font-size: 0.95rem; line-height: 1.6; }
+    .message-bubble.sent { align-self: flex-end; background: var(--text); color: #fff; }
+    .message-bubble.received { align-self: flex-start; background: var(--bg); border: 1px solid var(--border); color: var(--text); }
+    .message-bubble .msg-meta { font-size: 0.72rem; opacity: 0.6; margin-top: 0.4rem; }
+    .reply-box { border-top: 1px solid var(--border); padding-top: 1.5rem; }
+    .reply-box textarea { width: 100%; margin-bottom: 0.75rem; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">used<span>motorcyclegear</span>.com</a>
+  <ul class="nav-links">
+    <li><a href="browse.html">Browse</a></li>
+    <li id="nav-auth-link"><a href="auth.html">Sign In</a></li>
+    <li id="nav-messages-link" style="display:none"><a href="account.html#messages">Messages</a></li>
+    <li><a href="post.html" class="btn-nav">+ Sell Gear</a></li>
+  </ul>
+</nav>
+
+<div class="conversation-page">
+  <p style="margin-bottom:1.5rem;"><a href="account.html#messages" style="color:var(--muted); font-size:0.9rem;">&larr; Back to messages</a></p>
+  <div id="content"><div class="loading">Loading conversation...</div></div>
+</div>
+
+<footer>&copy; 2026 usedmotorcyclegear.com — Ride safe.</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const listingId = params.get('listing');
+  const withUserId = params.get('with');
+  let currentUser = null;
+
+  async function load() {
+    currentUser = await requireAuth();
+    const content = document.getElementById('content');
+
+    const { data: listing } = await supabase.from('listings').select('title, id').eq('id', listingId).single();
+    const { data: otherProfile } = await supabase.from('profiles').select('full_name, username').eq('id', withUserId).single();
+    const otherName = otherProfile?.full_name || otherProfile?.username || 'User';
+
+    const { data: messages } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('listing_id', listingId)
+      .or(`sender_id.eq.${currentUser.id},recipient_id.eq.${currentUser.id}`)
+      .order('created_at', { ascending: true });
+
+    const unread = (messages || []).filter(m => m.recipient_id === currentUser.id && !m.read).map(m => m.id);
+    if (unread.length > 0) {
+      await supabase.from('messages').update({ read: true }).in('id', unread);
+    }
+
+    content.innerHTML = `
+      <div class="conversation-header">
+        <h2>Conversation with ${otherName}</h2>
+        ${listing ? `<a href="listing.html?id=${listing.id}">Re: ${listing.title}</a>` : ''}
+      </div>
+      <div class="message-thread" id="thread">
+        ${(messages || []).map(m => {
+          const sent = m.sender_id === currentUser.id;
+          return `
+            <div class="message-bubble ${sent ? 'sent' : 'received'}">
+              ${m.body}
+              <div class="msg-meta">${new Date(m.created_at).toLocaleString()}</div>
+            </div>`;
+        }).join('')}
+      </div>
+      <div class="reply-box">
+        <textarea id="reply-body" placeholder="Write a reply..." rows="4"></textarea>
+        <button id="reply-btn" class="btn btn-dark">Send Reply</button>
+        <div id="reply-alert" style="margin-top:0.6rem;"></div>
+      </div>
+    `;
+
+    document.getElementById('reply-btn').addEventListener('click', sendReply);
+  }
+
+  async function sendReply() {
+    const body = document.getElementById('reply-body').value.trim();
+    const alertEl = document.getElementById('reply-alert');
+    const btn = document.getElementById('reply-btn');
+    if (!body) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+
+    const { error } = await supabase.from('messages').insert({
+      listing_id: listingId,
+      sender_id: currentUser.id,
+      recipient_id: withUserId,
+      body
+    });
+
+    if (error) {
+      alertEl.innerHTML = '<div class="alert alert-error">Failed to send. Try again.</div>';
+      btn.disabled = false;
+      btn.textContent = 'Send Reply';
+    } else {
+      document.getElementById('reply-body').value = '';
+      btn.disabled = false;
+      btn.textContent = 'Send Reply';
+      const thread = document.getElementById('thread');
+      const bubble = document.createElement('div');
+      bubble.className = 'message-bubble sent';
+      bubble.innerHTML = `${body}<div class="msg-meta">Just now</div>`;
+      thread.appendChild(bubble);
+      thread.scrollTop = thread.scrollHeight;
+      alertEl.innerHTML = '';
+    }
+  }
+
+  load();
+</script>
+</body>
+</html>

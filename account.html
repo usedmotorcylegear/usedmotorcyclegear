@@ -193,15 +193,24 @@
       return;
     }
 
-    container.innerHTML = data.map(msg => `
-      <div class="my-listing-row" style="${!msg.read ? 'border-left:3px solid var(--primary);' : ''}">
+    const seen = new Set();
+    const conversations = data.filter(msg => {
+      const key = `${msg.listing_id}-${msg.sender_id}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    container.innerHTML = conversations.map(msg => `
+      <a href="messages.html?listing=${msg.listing_id}&with=${msg.sender_id}" class="my-listing-row" style="display:flex; text-decoration:none; ${!msg.read ? 'border-left:3px solid var(--primary);' : ''}">
         <div class="my-listing-info">
           <div class="my-listing-title" style="font-size:0.8rem; color:var(--muted); margin-bottom:0.25rem;">
             Re: ${msg.listings?.title || 'Listing'} &middot; ${new Date(msg.created_at).toLocaleDateString()}
           </div>
-          <div style="font-size:0.9rem;">${msg.body}</div>
+          <div style="font-size:0.9rem; color:var(--text);">${msg.body}</div>
         </div>
-      </div>
+        <div style="color:var(--muted); font-size:1.2rem; align-self:center; padding-left:1rem;">›</div>
+      </a>
     `).join('');
 
     const unread = data.filter(m => !m.read).map(m => m.id);
