@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How It Works — Used Motorcycle Gear</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .hiw-page { max-width: 860px; margin: 0 auto; padding: 4rem 2rem 6rem; }
+
+    .hiw-hero { text-align: center; margin-bottom: 5rem; }
+    .hiw-hero h1 { font-size: 2.6rem; font-weight: 900; letter-spacing: -0.04em; margin-bottom: 1rem; }
+    .hiw-hero p { font-size: 1.1rem; color: var(--muted); max-width: 540px; margin: 0 auto; line-height: 1.7; }
+
+    .hiw-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem 4rem; margin-bottom: 5rem; }
+    @media (max-width: 640px) { .hiw-grid { grid-template-columns: 1fr; } }
+
+    .hiw-col-title {
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--primary);
+      margin-bottom: 2rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid var(--primary);
+      display: inline-block;
+    }
+
+    .hiw-step { display: flex; gap: 1.25rem; margin-bottom: 2rem; }
+    .hiw-step-num {
+      width: 32px;
+      height: 32px;
+      background: var(--text);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 800;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .hiw-step-body h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.3rem; }
+    .hiw-step-body p { font-size: 0.9rem; color: var(--muted); line-height: 1.6; }
+
+    .hiw-trust {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 2.5rem;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+    @media (max-width: 640px) { .hiw-trust { grid-template-columns: 1fr; } }
+    .trust-item-icon { font-size: 1.75rem; margin-bottom: 0.6rem; }
+    .trust-item-title { font-weight: 800; font-size: 0.95rem; margin-bottom: 0.3rem; }
+    .trust-item-desc { font-size: 0.83rem; color: var(--muted); line-height: 1.5; }
+
+    .hiw-cta { text-align: center; }
+    .hiw-cta h2 { font-size: 1.8rem; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 0.75rem; }
+    .hiw-cta p { color: var(--muted); margin-bottom: 1.75rem; }
+    .hiw-cta-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">used<span>motorcyclegear</span>.com</a>
+  <ul class="nav-links">
+    <li><a href="browse.html">Browse</a></li>
+    <li><a href="how-it-works.html">How It Works</a></li>
+    <li id="nav-auth-link"><a href="auth.html">Sign In</a></li>
+    <li id="nav-messages-link" style="display:none"><a href="inbox.html">Messages</a></li>
+    <li id="nav-orders-link" style="display:none"><a href="orders.html">Orders</a></li>
+    <li><a href="post.html" class="btn-nav">+ Sell Gear</a></li>
+  </ul>
+</nav>
+
+<div class="hiw-page">
+
+  <div class="hiw-hero">
+    <h1>Buy and sell used riding gear,<br>the right way.</h1>
+    <p>A marketplace built for riders. Every transaction is protected — no sketchy meetups, no Venmo disputes, no ghosted sellers.</p>
+  </div>
+
+  <div class="hiw-grid">
+
+    <div>
+      <div class="hiw-col-title">For Buyers</div>
+
+      <div class="hiw-step">
+        <div class="hiw-step-num">1</div>
+        <div class="hiw-step-body">
+          <h3>Find your gear</h3>
+          <p>Browse listings by category, condition, and location. Every listing includes photos, a full description, and the seller's location.</p>
+        </div>
+      </div>
+
+      <div class="hiw-step">
+        <div class="hiw-step-num">2</div>
+        <div class="hiw-step-body">
+          <h3>Buy or make an offer</h3>
+          <p>Pay the asking price instantly or submit an offer. If the seller accepts, you'll get a checkout link sent directly to your messages.</p>
+        </div>
+      </div>
+
+      <div class="hiw-step">
+        <div class="hiw-step-num">3</div>
+        <div class="hiw-step-body">
+          <h3>Pay securely via Stripe</h3>
+          <p>Your payment is held in escrow — the seller doesn't receive a dime until after you've had time to confirm the item arrived as described.</p>
+        </div>
+      </div>
+
+      <div class="hiw-step">
+        <div class="hiw-step-num">4</div>
+        <div class="hiw-step-body">
+          <h3>Receive your gear</h3>
+          <p>Once the seller ships and enters a tracking number, funds are released 3 days after confirmed delivery — giving you a window to flag any issues.</p>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="hiw-col-title">For Sellers</div>
+
+      <div class="hiw-step">
+        <div class="hiw-step-num">1</div>
+        <div class="hiw-step-body">
+          <h3>Post your listing for free</h3>
+          <p>Upload photos, write a description, set your price. Takes less than 5 minutes. Your listing goes live immediately.</p>
+        </div>
+      </div>
+
+      <div class="hiw-step">
+        <div class="hiw-step-num">2</div>
+        <div class="hiw-step-body">
+          <h3>Get buyers through the site</h3>
+          <p>Buyers can message you, make offers, or buy outright. All communication stays on-platform — your contact info stays private.</p>
+        </div>
+      </div>
+
+      <div class="hiw-step">
+        <div class="hiw-step-num">3</div>
+        <div class="hiw-step-body">
+          <h3>Ship it and enter tracking</h3>
+          <p>Once paid, pack up the gear, ship it, and enter the tracking number in your Orders page. That starts the 3-day delivery clock.</p>
+        </div>
+      </div>
+
+      <div class="hiw-step">
+        <div class="hiw-step-num">4</div>
+        <div class="hiw-step-body">
+          <h3>Get paid</h3>
+          <p>After the 3-day window closes with no disputes, your payout is released. A 13.33% platform fee covers payment processing and buyer protection.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="hiw-trust">
+    <div class="trust-item">
+      <div class="trust-item-icon">🔒</div>
+      <div class="trust-item-title">Secure payments</div>
+      <div class="trust-item-desc">All payments processed by Stripe. Your card info never touches our servers.</div>
+    </div>
+    <div class="trust-item">
+      <div class="trust-item-icon">📦</div>
+      <div class="trust-item-title">3-day buyer protection</div>
+      <div class="trust-item-desc">Funds held after delivery so you have time to verify the gear matches the listing.</div>
+    </div>
+    <div class="trust-item">
+      <div class="trust-item-icon">💬</div>
+      <div class="trust-item-title">On-site messaging</div>
+      <div class="trust-item-desc">Contact sellers directly through the platform. No phone numbers, no spam.</div>
+    </div>
+  </div>
+
+  <div class="hiw-cta">
+    <h2>Ready to ride?</h2>
+    <p>Browse hundreds of listings or post your gear in minutes.</p>
+    <div class="hiw-cta-btns">
+      <a href="browse.html" class="btn btn-dark">Browse Listings</a>
+      <a href="post.html" class="btn btn-outline">Sell Your Gear</a>
+    </div>
+  </div>
+
+</div>
+
+<footer>&copy; 2026 usedmotorcyclegear.com — Ride safe.</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+</body>
+</html>
