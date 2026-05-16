@@ -26,3 +26,12 @@ async function requireAuth() {
 }
 
 updateNavForUser();
+
+(function randomizeNavBtn() {
+  const btn = document.querySelector('.btn-nav');
+  if (!btn) return;
+  if (Math.random() < 0.5) {
+    btn.textContent = '+ Buy Gear';
+    btn.href = 'browse.html';
+  }
+})();
