@@ -194,8 +194,8 @@ nav {
 /* HERO */
 .hero {
   background: #ffffff;
-  padding: 2rem 3rem 1.75rem;
-  min-height: calc(100vh - 80px - 52px - 110px);
+  padding: 3rem 3rem 3.5rem;
+  min-height: clamp(280px, calc(100vh - 240px), 480px);
   display: flex;
   flex-direction: column;
   justify-content: center;
