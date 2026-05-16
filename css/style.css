@@ -23,7 +23,7 @@ a { color: inherit; text-decoration: none; }
 
 /* NAV */
 nav {
-  background: var(--surface);
+  background: #ffffff;
   border-bottom: 1px solid var(--border);
   padding: 0 2.5rem;
   display: flex;
@@ -98,7 +98,7 @@ nav {
 
 /* SUBNAV */
 .subnav {
-  background: var(--surface);
+  background: #ffffff;
   border-bottom: 1px solid var(--border);
   padding: 0 2.5rem;
   display: flex;
