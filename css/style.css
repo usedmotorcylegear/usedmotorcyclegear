@@ -144,8 +144,7 @@ nav {
 }
 
 .hero-inner {
-  max-width: 1200px;
-  margin: 0 auto;
+  max-width: 100%;
 }
 
 .hero-tag {
@@ -180,8 +179,6 @@ nav {
 /* LISTINGS GRID */
 .listings-section {
   padding: 2rem 3rem 4rem;
-  max-width: 1200px;
-  margin: 0 auto;
 }
 
 .section-title {
@@ -242,8 +239,6 @@ nav {
 
 /* BROWSE PAGE */
 .browse-layout {
-  max-width: 1200px;
-  margin: 0 auto;
   padding: 3rem;
 }
 
@@ -283,8 +278,7 @@ select.filter-select:focus { outline: none; border-color: var(--text); }
 
 /* LISTING DETAIL */
 .listing-detail {
-  max-width: 1200px;
-  margin: 3rem auto;
+  margin: 3rem 0;
   padding: 0 3rem;
 }
 
@@ -427,8 +421,7 @@ select option { background: #fff; }
 
 /* ACCOUNT PAGE */
 .account-page {
-  max-width: 1200px;
-  margin: 3rem auto;
+  margin: 3rem 0;
   padding: 0 3rem;
 }
 
