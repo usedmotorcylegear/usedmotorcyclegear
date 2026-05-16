@@ -112,10 +112,15 @@
             <div class="seller-location">${profile?.location || listing.location || ''}</div>
 
             ${!isOwner ? `
-              ${profile?.phone
-                ? `<a href="tel:${profile.phone}" class="btn btn-primary btn-full" style="margin-bottom:0.75rem;">📞 Call Seller</a>`
-                : ''}
-              <a href="mailto:?subject=Re: ${encodeURIComponent(listing.title)}" class="btn btn-outline btn-full">✉️ Email Seller</a>
+              ${currentUser ? `
+                <div id="msg-form">
+                  <textarea id="msg-body" placeholder="Write a message to the seller..." style="width:100%;margin-bottom:0.6rem;"></textarea>
+                  <button class="btn btn-dark btn-full" onclick="sendMessage('${listing.user_id}')">Send Message</button>
+                  <div id="msg-alert" style="margin-top:0.6rem;"></div>
+                </div>
+              ` : `
+                <a href="auth.html?next=listing.html?id=${id}" class="btn btn-dark btn-full">Sign in to Message Seller</a>
+              `}
             ` : `<p style="color:var(--muted); font-size:0.85rem;">This is your listing.</p>`}
           </div>
         </div>
@@ -127,6 +132,26 @@
     document.getElementById('main-img').src = src;
     document.querySelectorAll('.thumb-row img').forEach(t => t.classList.remove('active'));
     el.classList.add('active');
+  }
+
+  async function sendMessage(recipientId) {
+    const body = document.getElementById('msg-body').value.trim();
+    const alertEl = document.getElementById('msg-alert');
+    if (!body) { alertEl.innerHTML = '<div class="alert alert-error">Please write a message first.</div>'; return; }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await supabase.from('messages').insert({
+      listing_id: id,
+      sender_id: user.id,
+      recipient_id: recipientId,
+      body
+    });
+
+    if (error) {
+      alertEl.innerHTML = '<div class="alert alert-error">Failed to send. Please try again.</div>';
+    } else {
+      document.getElementById('msg-form').innerHTML = '<div class="alert alert-success">Message sent!</div>';
+    }
   }
 
   async function deleteListing(id) {

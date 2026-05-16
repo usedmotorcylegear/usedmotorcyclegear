@@ -42,6 +42,12 @@
         <div id="my-listings"><div class="loading">Loading...</div></div>
       </section>
 
+      <!-- MESSAGES -->
+      <section id="messages" style="margin-top:3rem;">
+        <div class="account-section-title">Messages</div>
+        <div id="messages-list"><div class="loading">Loading...</div></div>
+      </section>
+
       <!-- EDIT PROFILE -->
       <section id="profile" style="margin-top:3rem;">
         <div class="account-section-title">Edit Profile</div>
@@ -103,6 +109,7 @@
     }
 
     loadMyListings();
+    loadMessages();
   }
 
   async function loadMyListings() {
@@ -171,6 +178,36 @@
     btn.disabled = false;
     btn.textContent = 'Save Changes';
   });
+
+  async function loadMessages() {
+    const container = document.getElementById('messages-list');
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*, listings(title)')
+      .eq('recipient_id', currentUser.id)
+      .order('created_at', { ascending: false });
+
+    if (error || !data || data.length === 0) {
+      container.innerHTML = '<p style="color:var(--muted); font-size:0.9rem;">No messages yet.</p>';
+      return;
+    }
+
+    container.innerHTML = data.map(msg => `
+      <div class="my-listing-row" style="${!msg.read ? 'border-left:3px solid var(--primary);' : ''}">
+        <div class="my-listing-info">
+          <div class="my-listing-title" style="font-size:0.8rem; color:var(--muted); margin-bottom:0.25rem;">
+            Re: ${msg.listings?.title || 'Listing'} &middot; ${new Date(msg.created_at).toLocaleDateString()}
+          </div>
+          <div style="font-size:0.9rem;">${msg.body}</div>
+        </div>
+      </div>
+    `).join('');
+
+    const unread = data.filter(m => !m.read).map(m => m.id);
+    if (unread.length > 0) {
+      await supabase.from('messages').update({ read: true }).in('id', unread);
+    }
+  }
 
   document.getElementById('signout-btn').addEventListener('click', async (e) => {
     e.preventDefault();
