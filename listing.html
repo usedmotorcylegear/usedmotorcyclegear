@@ -112,21 +112,27 @@
             <div class="seller-name">${profile?.full_name || profile?.username || 'Anonymous'}</div>
             <div class="seller-location">${profile?.location || listing.location || ''}</div>
 
-            ${!isOwner ? `
-              ${currentUser ? `
-                <div id="msg-form">
-                  <textarea id="msg-body" placeholder="Write a message to the seller..." style="width:100%;margin-bottom:0.6rem;"></textarea>
-                  <button class="btn btn-dark btn-full" onclick="sendMessage('${listing.user_id}')">Send Message</button>
-                  <div id="msg-alert" style="margin-top:0.6rem;"></div>
-                </div>
-              ` : `
-                <a href="auth.html?next=listing.html?id=${id}" class="btn btn-dark btn-full">Sign in to Message Seller</a>
-              `}
-            ` : `<p style="color:var(--muted); font-size:0.85rem;">This is your listing.</p>`}
+            <div id="contact-section"></div>
           </div>
         </div>
       </div>
     `;
+  }
+
+    const contactEl = document.getElementById('contact-section');
+    if (isOwner) {
+      contactEl.innerHTML = '<p style="color:var(--muted); font-size:0.9rem;">This is your listing.</p>';
+    } else if (currentUser) {
+      contactEl.innerHTML = `
+        <div id="msg-form">
+          <textarea id="msg-body" placeholder="Write a message to the seller..." style="width:100%; margin-bottom:0.75rem;"></textarea>
+          <button id="send-btn" class="btn btn-dark btn-full">Send Message</button>
+          <div id="msg-alert" style="margin-top:0.6rem;"></div>
+        </div>`;
+      document.getElementById('send-btn').addEventListener('click', () => sendMessage(listing.user_id));
+    } else {
+      contactEl.innerHTML = `<a href="auth.html?next=listing.html%3Fid%3D${id}" class="btn btn-dark btn-full">Sign in to Message Seller</a>`;
+    }
   }
 
   function setMain(src, el) {
