@@ -308,7 +308,8 @@ select.filter-select:focus { outline: none; border-color: var(--text); }
 .thumb-row img:hover, .thumb-row img.active { border-color: var(--text); opacity: 1; }
 
 .listing-detail-title { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.4rem; letter-spacing: -0.02em; }
-.listing-detail-price { font-size: 1.8rem; font-weight: 800; color: var(--success); margin-bottom: 1rem; }
+.listing-detail-price { font-size: 1.8rem; font-weight: 800; margin-bottom: 1rem; color: var(--text); }
+.listing-detail-price .price-amount { color: #85bb65; }
 
 .badge {
   display: inline-block;

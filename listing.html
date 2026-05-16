@@ -104,7 +104,7 @@
         <div>
           <div class="seller-card">
             <div class="listing-detail-title">${listing.title}</div>
-            <div class="listing-detail-price">$${Number(listing.price).toLocaleString()}</div>
+            <div class="listing-detail-price">$<span class="price-amount">${Number(listing.price).toLocaleString()}</span></div>
             <span class="badge">${listing.category}</span>
             <span class="badge">${listing.condition}</span>
 
