@@ -140,7 +140,6 @@ nav {
 /* HERO */
 .hero {
   background: #ffffff;
-  border-bottom: 1px solid var(--border);
   padding: 7rem 3rem 6rem;
 }
 
