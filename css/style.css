@@ -140,7 +140,7 @@ nav {
 /* HERO */
 .hero {
   background: #ffffff;
-  padding: 7rem 3rem 6rem;
+  padding: 3rem 3rem 2.5rem;
 }
 
 .hero-inner {
@@ -179,7 +179,7 @@ nav {
 
 /* LISTINGS GRID */
 .listings-section {
-  padding: 4rem 3rem;
+  padding: 2rem 3rem 4rem;
   max-width: 1200px;
   margin: 0 auto;
 }
