@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In — Used Motorcycle Gear</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">used<span>motorcyclegear</span>.com</a>
+  <ul class="nav-links">
+    <li><a href="browse.html">Browse</a></li>
+    <li><a href="post.html" class="btn-nav">+ Sell Gear</a></li>
+  </ul>
+</nav>
+
+<div class="form-page">
+  <div class="form-card">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('login', this)">Sign In</button>
+      <button class="tab-btn" onclick="switchTab('signup', this)">Create Account</button>
+    </div>
+
+    <div id="alert"></div>
+
+    <!-- LOGIN -->
+    <div id="tab-login" class="tab-content active">
+      <form id="login-form">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="login-email" placeholder="you@example.com" required />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="login-password" placeholder="••••••••" required />
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">Sign In</button>
+      </form>
+    </div>
+
+    <!-- SIGNUP -->
+    <div id="tab-signup" class="tab-content">
+      <form id="signup-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label>First Name</label>
+            <input type="text" id="signup-firstname" placeholder="John" required />
+          </div>
+          <div class="form-group">
+            <label>Last Name</label>
+            <input type="text" id="signup-lastname" placeholder="Doe" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" id="signup-username" placeholder="riderjohn" required />
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="signup-email" placeholder="you@example.com" required />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="signup-password" placeholder="At least 6 characters" required />
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script>
+  const nextPage = new URLSearchParams(window.location.search).get('next') || 'index.html';
+
+  supabase.auth.getUser().then(({ data: { user } }) => {
+    if (user) window.location.href = nextPage;
+  });
+
+  function switchTab(tab, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + tab).classList.add('active');
+    showAlert('', '');
+  }
+
+  function showAlert(msg, type) {
+    const el = document.getElementById('alert');
+    el.innerHTML = msg ? `<div class="alert alert-${type}">${msg}</div>` : '';
+  }
+
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button');
+    btn.disabled = true;
+    btn.textContent = 'Signing in...';
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email: document.getElementById('login-email').value,
+      password: document.getElementById('login-password').value,
+    });
+
+    if (error) {
+      showAlert(error.message, 'error');
+      btn.disabled = false;
+      btn.textContent = 'Sign In';
+    } else {
+      window.location.href = nextPage;
+    }
+  });
+
+  document.getElementById('signup-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button');
+    btn.disabled = true;
+    btn.textContent = 'Creating account...';
+
+    const email = document.getElementById('signup-email').value;
+    const password = document.getElementById('signup-password').value;
+    const username = document.getElementById('signup-username').value.trim().toLowerCase();
+    const fullName = `${document.getElementById('signup-firstname').value} ${document.getElementById('signup-lastname').value}`.trim();
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { username, full_name: fullName } }
+    });
+
+    if (error) {
+      showAlert(error.message, 'error');
+      btn.disabled = false;
+      btn.textContent = 'Create Account';
+    } else {
+      showAlert('Account created! Check your email to confirm, then sign in.', 'success');
+      btn.disabled = false;
+      btn.textContent = 'Create Account';
+    }
+  });
+</script>
+</body>
+</html>

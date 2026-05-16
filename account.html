@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Account — Used Motorcycle Gear</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">used<span>motorcyclegear</span>.com</a>
+  <ul class="nav-links">
+    <li><a href="browse.html">Browse</a></li>
+    <li id="nav-auth-link"><a href="auth.html">Sign In</a></li>
+    <li><a href="post.html" class="btn-nav">+ Sell Gear</a></li>
+  </ul>
+</nav>
+
+<div class="account-page">
+  <div class="account-grid">
+
+    <div class="account-sidebar">
+      <div class="account-avatar" id="avatar-initials">?</div>
+      <div class="account-username" id="sidebar-name">Loading...</div>
+      <div class="account-email" id="sidebar-email"></div>
+      <ul class="sidebar-links">
+        <li><a href="#listings" class="active">My Listings</a></li>
+        <li><a href="#profile">Edit Profile</a></li>
+        <li><a href="#" id="signout-btn">Sign Out</a></li>
+      </ul>
+    </div>
+
+    <div class="account-main">
+
+      <!-- MY LISTINGS -->
+      <section id="listings">
+        <div class="account-section-title">My Listings</div>
+        <div style="margin-bottom:1rem;">
+          <a href="post.html" class="btn btn-primary">+ New Listing</a>
+        </div>
+        <div id="my-listings"><div class="loading">Loading...</div></div>
+      </section>
+
+      <!-- EDIT PROFILE -->
+      <section id="profile" style="margin-top:3rem;">
+        <div class="account-section-title">Edit Profile</div>
+        <div id="profile-alert"></div>
+        <form id="profile-form" style="max-width:480px;">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="full-name" placeholder="John Doe" />
+          </div>
+          <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="username" placeholder="riderjohn" />
+          </div>
+          <div class="form-group">
+            <label>Location</label>
+            <input type="text" id="profile-location" placeholder="Denver, CO" />
+          </div>
+          <div class="form-group">
+            <label>Phone (visible to buyers)</label>
+            <input type="tel" id="phone" placeholder="555-123-4567" />
+          </div>
+          <button type="submit" class="btn btn-primary" id="profile-btn">Save Changes</button>
+        </form>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<footer>
+  &copy; 2026 usedmotorcyclegear.com — Ride safe.
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  let currentUser = null;
+
+  async function init() {
+    currentUser = await requireAuth();
+
+    document.getElementById('sidebar-email').textContent = currentUser.email;
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', currentUser.id)
+      .single();
+
+    if (profile) {
+      const name = profile.full_name || profile.username || currentUser.email;
+      document.getElementById('sidebar-name').textContent = name;
+      document.getElementById('avatar-initials').textContent = name.charAt(0).toUpperCase();
+      document.getElementById('full-name').value = profile.full_name || '';
+      document.getElementById('username').value = profile.username || '';
+      document.getElementById('profile-location').value = profile.location || '';
+      document.getElementById('phone').value = profile.phone || '';
+    }
+
+    loadMyListings();
+  }
+
+  async function loadMyListings() {
+    const container = document.getElementById('my-listings');
+    const { data, error } = await supabase
+      .from('listings')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .order('created_at', { ascending: false });
+
+    if (error || !data || data.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="icon">📦</div>
+          <p>You haven't posted any listings yet.</p>
+          <a href="post.html" class="btn btn-primary">Post Your First Listing</a>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = data.map(listing => `
+      <div class="my-listing-row">
+        ${listing.images && listing.images.length > 0
+          ? `<img src="${listing.images[0]}" alt="${listing.title}" />`
+          : `<div class="thumb-placeholder">🏍️</div>`}
+        <div class="my-listing-info">
+          <div class="my-listing-title">${listing.title}</div>
+          <div class="my-listing-price">$${Number(listing.price).toLocaleString()}</div>
+          <div style="font-size:0.8rem; color:var(--muted);">${listing.category} &middot; ${listing.condition} &middot; ${listing.status}</div>
+        </div>
+        <div class="my-listing-actions">
+          <a href="listing.html?id=${listing.id}" class="btn btn-outline">View</a>
+          <a href="post.html?edit=${listing.id}" class="btn btn-outline">Edit</a>
+          <button class="btn btn-danger" onclick="deleteListing('${listing.id}')">Delete</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function deleteListing(id) {
+    if (!confirm('Delete this listing?')) return;
+    const { error } = await supabase.from('listings').delete().eq('id', id);
+    if (!error) loadMyListings();
+    else alert('Error deleting listing.');
+  }
+
+  document.getElementById('profile-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('profile-btn');
+    const alertEl = document.getElementById('profile-alert');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    const { error } = await supabase.from('profiles').upsert({
+      id: currentUser.id,
+      full_name: document.getElementById('full-name').value.trim(),
+      username: document.getElementById('username').value.trim().toLowerCase(),
+      location: document.getElementById('profile-location').value.trim(),
+      phone: document.getElementById('phone').value.trim(),
+    });
+
+    alertEl.innerHTML = error
+      ? `<div class="alert alert-error">${error.message}</div>`
+      : `<div class="alert alert-success">Profile saved!</div>`;
+
+    btn.disabled = false;
+    btn.textContent = 'Save Changes';
+  });
+
+  document.getElementById('signout-btn').addEventListener('click', async (e) => {
+    e.preventDefault();
+    await supabase.auth.signOut();
+    window.location.href = 'index.html';
+  });
+
+  init();
+</script>
+</body>
+</html>

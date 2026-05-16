@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Browse Listings — Used Motorcycle Gear</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">used<span>motorcyclegear</span>.com</a>
+  <ul class="nav-links">
+    <li><a href="browse.html">Browse</a></li>
+    <li id="nav-auth-link"><a href="auth.html">Sign In</a></li>
+    <li><a href="post.html" class="btn-nav">+ Sell Gear</a></li>
+  </ul>
+</nav>
+
+<div class="browse-layout">
+  <div class="browse-header">
+    <input type="text" class="search-bar" id="search" placeholder="Search listings..." />
+    <select class="filter-select" id="category-filter">
+      <option value="">All Categories</option>
+      <option>Helmets</option>
+      <option>Jackets</option>
+      <option>Gloves</option>
+      <option>Boots</option>
+      <option>Pants</option>
+      <option>Protection</option>
+      <option>Luggage</option>
+      <option>Accessories</option>
+    </select>
+    <select class="filter-select" id="sort-filter">
+      <option value="created_at">Newest First</option>
+      <option value="price_asc">Price: Low to High</option>
+      <option value="price_desc">Price: High to Low</option>
+    </select>
+  </div>
+
+  <div id="results-count" style="color:var(--muted); font-size:0.9rem; margin-bottom:1rem;"></div>
+  <div id="listings-grid" class="listings-grid">
+    <div class="loading">Loading listings...</div>
+  </div>
+</div>
+
+<footer>
+  &copy; 2026 usedmotorcyclegear.com — Ride safe.
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const categoryFilter = document.getElementById('category-filter');
+  const sortFilter = document.getElementById('sort-filter');
+  const searchInput = document.getElementById('search');
+
+  if (params.get('category')) {
+    categoryFilter.value = params.get('category');
+  }
+
+  let debounceTimer;
+
+  async function loadListings() {
+    const grid = document.getElementById('listings-grid');
+    const count = document.getElementById('results-count');
+    grid.innerHTML = '<div class="loading">Loading...</div>';
+
+    const category = categoryFilter.value;
+    const sort = sortFilter.value;
+    const search = searchInput.value.trim();
+
+    let query = supabase
+      .from('listings')
+      .select('*')
+      .eq('status', 'active');
+
+    if (category) query = query.eq('category', category);
+    if (search) query = query.ilike('title', `%${search}%`);
+
+    if (sort === 'price_asc') query = query.order('price', { ascending: true });
+    else if (sort === 'price_desc') query = query.order('price', { ascending: false });
+    else query = query.order('created_at', { ascending: false });
+
+    const { data, error } = await query;
+
+    if (error) {
+      grid.innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>Error loading listings.</p></div>';
+      return;
+    }
+
+    count.textContent = `${data.length} listing${data.length !== 1 ? 's' : ''} found`;
+
+    if (data.length === 0) {
+      grid.innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1">
+          <div class="icon">🔍</div>
+          <p>No listings match your search.</p>
+          <a href="post.html" class="btn btn-primary">Be the first to sell!</a>
+        </div>`;
+      return;
+    }
+
+    grid.innerHTML = data.map(listing => `
+      <a href="listing.html?id=${listing.id}" class="listing-card">
+        ${listing.images && listing.images.length > 0
+          ? `<img src="${listing.images[0]}" alt="${listing.title}" loading="lazy" />`
+          : `<div class="placeholder-img">🏍️</div>`}
+        <div class="listing-info">
+          <div class="listing-title">${listing.title}</div>
+          <div class="listing-price">$${Number(listing.price).toLocaleString()}</div>
+          <div class="listing-meta">${listing.category} &middot; ${listing.condition} &middot; ${listing.location || 'No location'}</div>
+        </div>
+      </a>
+    `).join('');
+  }
+
+  categoryFilter.addEventListener('change', loadListings);
+  sortFilter.addEventListener('change', loadListings);
+  searchInput.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(loadListings, 350);
+  });
+
+  loadListings();
+</script>
+</body>
+</html>

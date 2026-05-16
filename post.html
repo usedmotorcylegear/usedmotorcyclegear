@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Post a Listing — Used Motorcycle Gear</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">used<span>motorcyclegear</span>.com</a>
+  <ul class="nav-links">
+    <li><a href="browse.html">Browse</a></li>
+    <li id="nav-auth-link"><a href="auth.html">Sign In</a></li>
+    <li><a href="post.html" class="btn-nav">+ Sell Gear</a></li>
+  </ul>
+</nav>
+
+<div class="form-page" style="max-width:680px;">
+  <div class="form-card">
+    <h2 id="page-title">Post a Listing</h2>
+    <p class="subtitle">Fill in the details below to list your gear for sale.</p>
+
+    <div id="alert"></div>
+
+    <form id="post-form">
+      <div class="form-group">
+        <label>Title</label>
+        <input type="text" id="title" placeholder="e.g. Shoei RF-1400 Helmet Size L" required />
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Category</label>
+          <select id="category" required>
+            <option value="">Select category</option>
+            <option>Helmets</option>
+            <option>Jackets</option>
+            <option>Gloves</option>
+            <option>Boots</option>
+            <option>Pants</option>
+            <option>Protection</option>
+            <option>Luggage</option>
+            <option>Accessories</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Condition</label>
+          <select id="condition" required>
+            <option value="">Select condition</option>
+            <option>Like New</option>
+            <option>Excellent</option>
+            <option>Good</option>
+            <option>Fair</option>
+            <option>For Parts</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Price ($)</label>
+          <input type="number" id="price" placeholder="150" min="0" step="0.01" required />
+        </div>
+        <div class="form-group">
+          <label>Location</label>
+          <input type="text" id="location" placeholder="e.g. Denver, CO" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="description" placeholder="Describe the item — size, brand, how long you've had it, reason for selling, any damage..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Photos</label>
+        <div class="upload-area" onclick="document.getElementById('file-input').click()">
+          <input type="file" id="file-input" accept="image/*" multiple />
+          <div class="upload-icon">📷</div>
+          <p>Click to upload photos (up to 5)</p>
+        </div>
+        <div class="image-previews" id="previews"></div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full" id="submit-btn">Post Listing</button>
+    </form>
+  </div>
+</div>
+
+<footer>
+  &copy; 2026 usedmotorcyclegear.com — Ride safe.
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  let currentUser = null;
+  let selectedFiles = [];
+  let editId = new URLSearchParams(window.location.search).get('edit');
+
+  function showAlert(msg, type) {
+    const el = document.getElementById('alert');
+    el.innerHTML = msg ? `<div class="alert alert-${type}">${msg}</div>` : '';
+  }
+
+  async function init() {
+    currentUser = await requireAuth();
+
+    if (editId) {
+      document.getElementById('page-title').textContent = 'Edit Listing';
+      const { data } = await supabase.from('listings').select('*').eq('id', editId).single();
+      if (data && data.user_id === currentUser.id) {
+        document.getElementById('title').value = data.title;
+        document.getElementById('category').value = data.category;
+        document.getElementById('condition').value = data.condition;
+        document.getElementById('price').value = data.price;
+        document.getElementById('location').value = data.location || '';
+        document.getElementById('description').value = data.description || '';
+      }
+    }
+  }
+
+  document.getElementById('file-input').addEventListener('change', (e) => {
+    const files = Array.from(e.target.files).slice(0, 5);
+    selectedFiles = files;
+    const previews = document.getElementById('previews');
+    previews.innerHTML = '';
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = document.createElement('img');
+        img.src = ev.target.result;
+        previews.appendChild(img);
+      };
+      reader.readAsDataURL(file);
+    });
+  });
+
+  async function uploadImages(userId) {
+    const urls = [];
+    for (const file of selectedFiles) {
+      const ext = file.name.split('.').pop();
+      const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from('listing-images').upload(path, file);
+      if (!error) {
+        const { data } = supabase.storage.from('listing-images').getPublicUrl(path);
+        urls.push(data.publicUrl);
+      }
+    }
+    return urls;
+  }
+
+  document.getElementById('post-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'Uploading...';
+
+    try {
+      let imageUrls = [];
+      if (selectedFiles.length > 0) {
+        imageUrls = await uploadImages(currentUser.id);
+      }
+
+      const payload = {
+        user_id: currentUser.id,
+        title: document.getElementById('title').value.trim(),
+        category: document.getElementById('category').value,
+        condition: document.getElementById('condition').value,
+        price: parseFloat(document.getElementById('price').value),
+        location: document.getElementById('location').value.trim(),
+        description: document.getElementById('description').value.trim(),
+        status: 'active',
+        ...(imageUrls.length > 0 && { images: imageUrls }),
+      };
+
+      let error;
+      if (editId) {
+        ({ error } = await supabase.from('listings').update(payload).eq('id', editId));
+      } else {
+        ({ error } = await supabase.from('listings').insert(payload));
+      }
+
+      if (error) throw error;
+      window.location.href = 'account.html';
+    } catch (err) {
+      showAlert(err.message || 'Something went wrong. Please try again.', 'error');
+      btn.disabled = false;
+      btn.textContent = editId ? 'Save Changes' : 'Post Listing';
+    }
+  });
+
+  init();
+</script>
+</body>
+</html>

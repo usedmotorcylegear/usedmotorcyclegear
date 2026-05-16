@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Used Motorcycle Gear — Buy & Sell Riding Gear</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">used<span>motorcyclegear</span>.com</a>
+  <ul class="nav-links">
+    <li><a href="browse.html">Browse</a></li>
+    <li id="nav-auth-link"><a href="auth.html">Sign In</a></li>
+    <li><a href="post.html" class="btn-nav">+ Sell Gear</a></li>
+  </ul>
+</nav>
+
+<section class="hero">
+  <h1>Buy & Sell<br /><span>Used Motorcycle Gear</span></h1>
+  <p>The best place to find quality used helmets, jackets, boots, and more from riders like you.</p>
+  <div class="hero-actions">
+    <a href="browse.html" class="btn btn-primary">Browse Listings</a>
+    <a href="post.html" class="btn btn-outline">Sell Your Gear</a>
+  </div>
+</section>
+
+<section class="categories">
+  <div class="section-title">Shop by Category</div>
+  <div class="category-grid">
+    <a href="browse.html?category=Helmets" class="category-card">
+      <div class="icon">🪖</div>
+      <div class="label">Helmets</div>
+    </a>
+    <a href="browse.html?category=Jackets" class="category-card">
+      <div class="icon">🧥</div>
+      <div class="label">Jackets</div>
+    </a>
+    <a href="browse.html?category=Gloves" class="category-card">
+      <div class="icon">🧤</div>
+      <div class="label">Gloves</div>
+    </a>
+    <a href="browse.html?category=Boots" class="category-card">
+      <div class="icon">🥾</div>
+      <div class="label">Boots</div>
+    </a>
+    <a href="browse.html?category=Pants" class="category-card">
+      <div class="icon">👖</div>
+      <div class="label">Pants</div>
+    </a>
+    <a href="browse.html?category=Protection" class="category-card">
+      <div class="icon">🛡️</div>
+      <div class="label">Protection</div>
+    </a>
+    <a href="browse.html?category=Luggage" class="category-card">
+      <div class="icon">🎒</div>
+      <div class="label">Luggage</div>
+    </a>
+    <a href="browse.html?category=Accessories" class="category-card">
+      <div class="icon">⚙️</div>
+      <div class="label">Accessories</div>
+    </a>
+  </div>
+</section>
+
+<section class="listings-section">
+  <div class="section-title">Recent Listings</div>
+  <div id="listings-grid" class="listings-grid">
+    <div class="loading">Loading listings...</div>
+  </div>
+  <div style="text-align:center; margin-top:2rem;">
+    <a href="browse.html" class="btn btn-outline">View All Listings</a>
+  </div>
+</section>
+
+<footer>
+  &copy; 2026 usedmotorcyclegear.com — Ride safe.
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  async function loadRecentListings() {
+    const { data, error } = await supabase
+      .from('listings')
+      .select('*')
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(8);
+
+    const grid = document.getElementById('listings-grid');
+
+    if (error || !data || data.length === 0) {
+      grid.innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1">
+          <div class="icon">🏍️</div>
+          <p>No listings yet. Be the first to sell your gear!</p>
+          <a href="post.html" class="btn btn-primary">Post a Listing</a>
+        </div>`;
+      return;
+    }
+
+    grid.innerHTML = data.map(listing => `
+      <a href="listing.html?id=${listing.id}" class="listing-card">
+        ${listing.images && listing.images.length > 0
+          ? `<img src="${listing.images[0]}" alt="${listing.title}" loading="lazy" />`
+          : `<div class="placeholder-img">🏍️</div>`}
+        <div class="listing-info">
+          <div class="listing-title">${listing.title}</div>
+          <div class="listing-price">$${Number(listing.price).toLocaleString()}</div>
+          <div class="listing-meta">${listing.category} &middot; ${listing.condition} &middot; ${listing.location || 'Location not set'}</div>
+        </div>
+      </a>
+    `).join('');
+  }
+
+  loadRecentListings();
+</script>
+</body>
+</html>

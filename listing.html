@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Listing — Used Motorcycle Gear</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">used<span>motorcyclegear</span>.com</a>
+  <ul class="nav-links">
+    <li><a href="browse.html">Browse</a></li>
+    <li id="nav-auth-link"><a href="auth.html">Sign In</a></li>
+    <li><a href="post.html" class="btn-nav">+ Sell Gear</a></li>
+  </ul>
+</nav>
+
+<div class="listing-detail">
+  <p style="margin-bottom:1.5rem;"><a href="browse.html" style="color:var(--muted); font-size:0.9rem;">&larr; Back to listings</a></p>
+  <div id="content"><div class="loading">Loading listing...</div></div>
+</div>
+
+<footer>
+  &copy; 2026 usedmotorcyclegear.com — Ride safe.
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  const id = new URLSearchParams(window.location.search).get('id');
+
+  async function load() {
+    const content = document.getElementById('content');
+
+    if (!id) {
+      content.innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>No listing specified.</p></div>';
+      return;
+    }
+
+    const { data: listing, error } = await supabase
+      .from('listings')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error || !listing) {
+      content.innerHTML = '<div class="empty-state"><div class="icon">🔍</div><p>Listing not found.</p></div>';
+      return;
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('username, full_name, location, phone')
+      .eq('id', listing.user_id)
+      .single();
+
+    document.title = `${listing.title} — Used Motorcycle Gear`;
+
+    const images = listing.images && listing.images.length > 0 ? listing.images : [];
+    const mainImg = images[0] || null;
+
+    const currentUser = await getUser();
+    const isOwner = currentUser && currentUser.id === listing.user_id;
+
+    content.innerHTML = `
+      <div class="listing-detail-grid">
+        <div>
+          <div class="listing-images">
+            ${mainImg
+              ? `<img id="main-img" src="${mainImg}" alt="${listing.title}" />`
+              : `<div style="width:100%;height:300px;background:var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:4rem;">🏍️</div>`}
+            ${images.length > 1 ? `
+              <div class="thumb-row">
+                ${images.map((img, i) => `<img src="${img}" class="${i === 0 ? 'active' : ''}" onclick="setMain('${img}', this)" />`).join('')}
+              </div>` : ''}
+          </div>
+
+          <div class="detail-section" style="margin-top:1.5rem;">
+            <h3>Description</h3>
+            <p>${listing.description ? listing.description.replace(/\n/g, '<br>') : 'No description provided.'}</p>
+          </div>
+
+          <div class="detail-section">
+            <h3>Details</h3>
+            <p>
+              <strong>Category:</strong> ${listing.category}<br/>
+              <strong>Condition:</strong> ${listing.condition}<br/>
+              <strong>Location:</strong> ${listing.location || 'Not specified'}<br/>
+              <strong>Posted:</strong> ${new Date(listing.created_at).toLocaleDateString()}
+            </p>
+          </div>
+
+          ${isOwner ? `
+            <div style="margin-top:1.5rem; display:flex; gap:0.75rem;">
+              <a href="post.html?edit=${listing.id}" class="btn btn-outline">Edit Listing</a>
+              <button class="btn btn-danger" onclick="deleteListing('${listing.id}')">Delete</button>
+            </div>` : ''}
+        </div>
+
+        <div>
+          <div class="seller-card">
+            <div class="listing-detail-title">${listing.title}</div>
+            <div class="listing-detail-price">$${Number(listing.price).toLocaleString()}</div>
+            <span class="badge">${listing.category}</span>
+            <span class="badge">${listing.condition}</span>
+
+            <h3 style="margin-bottom:0.75rem; font-size:0.85rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em;">Seller</h3>
+            <div class="seller-name">${profile?.full_name || profile?.username || 'Anonymous'}</div>
+            <div class="seller-location">${profile?.location || listing.location || ''}</div>
+
+            ${!isOwner ? `
+              ${profile?.phone
+                ? `<a href="tel:${profile.phone}" class="btn btn-primary btn-full" style="margin-bottom:0.75rem;">📞 Call Seller</a>`
+                : ''}
+              <a href="mailto:?subject=Re: ${encodeURIComponent(listing.title)}" class="btn btn-outline btn-full">✉️ Email Seller</a>
+            ` : `<p style="color:var(--muted); font-size:0.85rem;">This is your listing.</p>`}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function setMain(src, el) {
+    document.getElementById('main-img').src = src;
+    document.querySelectorAll('.thumb-row img').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  async function deleteListing(id) {
+    if (!confirm('Are you sure you want to delete this listing?')) return;
+    const { error } = await supabase.from('listings').delete().eq('id', id);
+    if (!error) window.location.href = 'account.html';
+    else alert('Error deleting listing.');
+  }
+
+  load();
+</script>
+</body>
+</html>
