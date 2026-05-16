@@ -1,5 +1,6 @@
-// Hide nav links immediately so they don't flash in mid-update
+// Hide nav links on desktop so they don't flash while auth resolves
 (function() {
+  if (window.matchMedia('(max-width: 768px)').matches) return;
   const links = document.querySelector('.nav-links');
   if (links) links.style.opacity = '0';
 })();
@@ -35,10 +36,12 @@ async function updateNavForUser() {
     if (ordersLink) ordersLink.style.display = 'none';
   }
 
-  const links = document.querySelector('.nav-links');
-  if (links) {
-    links.style.transition = 'opacity 0.15s';
-    links.style.opacity = '1';
+  if (!window.matchMedia('(max-width: 768px)').matches) {
+    const links = document.querySelector('.nav-links');
+    if (links) {
+      links.style.transition = 'opacity 0.15s';
+      links.style.opacity = '1';
+    }
   }
 
   if (window.matchMedia('(max-width: 768px)').matches) {
