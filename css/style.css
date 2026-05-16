@@ -96,6 +96,30 @@ nav {
 .btn-full { width: 100%; text-align: center; }
 .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
+/* SUBNAV */
+.subnav {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.subnav-link {
+  display: inline-block;
+  padding: 0.7rem 1.1rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+}
+
+.subnav-link:hover { color: var(--text); border-bottom-color: var(--text); }
+
 /* HERO */
 .hero {
   background: var(--surface);
