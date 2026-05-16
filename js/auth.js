@@ -5,12 +5,15 @@ async function getUser() {
 
 async function updateNavForUser() {
   const user = await getUser();
-  const link = document.getElementById('nav-auth-link');
-  if (!link) return;
+  const authLink = document.getElementById('nav-auth-link');
+  const messagesLink = document.getElementById('nav-messages-link');
+  if (!authLink) return;
   if (user) {
-    link.innerHTML = `<a href="account.html">My Account</a></li><li><a href="account.html#messages">Messages</a>`;
+    authLink.innerHTML = `<a href="account.html">My Account</a>`;
+    if (messagesLink) messagesLink.style.display = 'list-item';
   } else {
-    link.innerHTML = `<a href="auth.html">Sign In</a>`;
+    authLink.innerHTML = `<a href="auth.html">Sign In</a>`;
+    if (messagesLink) messagesLink.style.display = 'none';
   }
 }
 
