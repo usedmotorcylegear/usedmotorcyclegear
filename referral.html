@@ -211,32 +211,62 @@
   function showGeneratePrompt(section) {
     section.innerHTML = `
       <div class="referral-card">
-        <div id="generate-section">
-          <p>You don't have a referral code yet. Generate yours to start earning.</p>
-          <button class="btn btn-primary" onclick="generateCode()">Get My Referral Code</button>
+        <h2>Choose Your Code</h2>
+        <p style="font-size:0.9rem;color:var(--muted);margin-bottom:1.25rem;">Pick something your audience will recognise — your name, handle, or brand. Letters and numbers only.</p>
+        <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem;">
+          <input type="text" id="code-input" placeholder="e.g. JOERIDER" maxlength="20"
+            style="flex:1;text-transform:uppercase;font-weight:700;letter-spacing:0.05em;font-size:1.05rem;" />
+          <button class="btn btn-outline" style="flex-shrink:0;padding:0.7rem 1rem;font-size:0.85rem;" onclick="autoFill()">Auto-generate</button>
         </div>
+        <div id="code-feedback" style="font-size:0.82rem;color:var(--muted);min-height:1.2em;margin-bottom:1rem;"></div>
+        <button class="btn btn-primary btn-full" onclick="claimCode()">Claim This Code</button>
       </div>`;
+
+    document.getElementById('code-input').addEventListener('input', function() {
+      this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      document.getElementById('code-feedback').textContent = '';
+    });
   }
 
-  async function generateCode() {
+  async function autoFill() {
     const { data: profile } = await supabase
-      .from('profiles')
-      .select('username')
-      .eq('id', currentUser.id)
-      .single();
+      .from('profiles').select('username').eq('id', currentUser.id).single();
 
-    let base = (profile?.username || 'rider').toLowerCase().replace(/[^a-z0-9]/g, '');
-    if (!base) base = 'rider';
+    let base = (profile?.username || 'rider').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (!base) base = 'RIDER';
 
-    let code = base;
+    const { data: taken } = await supabase.from('referral_codes').select('code').eq('code', base.toLowerCase()).maybeSingle();
+    const suggestion = taken ? base + Math.floor(Math.random() * 900 + 100) : base;
+
+    document.getElementById('code-input').value = suggestion;
+    document.getElementById('code-feedback').textContent = '';
+  }
+
+  async function claimCode() {
+    const raw = (document.getElementById('code-input')?.value || '').trim();
+    const code = raw.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const feedback = document.getElementById('code-feedback');
+
+    if (code.length < 3) {
+      feedback.style.color = 'var(--danger)';
+      feedback.textContent = 'Code must be at least 3 characters.';
+      return;
+    }
+
     const { data: taken } = await supabase.from('referral_codes').select('code').eq('code', code).maybeSingle();
-    if (taken) code = base + Math.floor(Math.random() * 900 + 100);
+    if (taken) {
+      feedback.style.color = 'var(--danger)';
+      feedback.textContent = `"${raw.toUpperCase()}" is already taken. Try another.`;
+      return;
+    }
 
     const { error } = await supabase.from('referral_codes').insert({ user_id: currentUser.id, code });
     if (error) {
-      showAlert('Could not generate code. Please try again.', 'error');
+      feedback.style.color = 'var(--danger)';
+      feedback.textContent = 'Something went wrong. Please try again.';
       return;
     }
+
     const section = document.getElementById('code-section');
     await showDashboard(code, section);
   }
