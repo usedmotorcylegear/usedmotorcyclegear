@@ -192,9 +192,14 @@ nav {
 
 .listings-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 2rem;
 }
+
+@media (min-width: 900px)  { .listings-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1300px) { .listings-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (min-width: 1700px) { .listings-grid { grid-template-columns: repeat(5, 1fr); } }
+@media (min-width: 2100px) { .listings-grid { grid-template-columns: repeat(6, 1fr); } }
 
 .listing-card {
   background: #ffffff;
