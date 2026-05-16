@@ -83,6 +83,12 @@
       <div class="price-row"><span class="muted">Buyer protection fee</span><span class="muted">$0.00</span></div>
       <div class="price-row total"><span>Total</span><span>$${price.toLocaleString()}</span></div>
 
+      <div class="form-group" style="margin-top:1.25rem;">
+        <label style="font-size:0.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:0.4rem;">Referral Code <span style="font-weight:400;text-transform:none;">(optional)</span></label>
+        <input type="text" id="referral-code" placeholder="e.g. RIDERJO" style="text-transform:uppercase;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:0.7rem 1rem;width:100%;font-size:1rem;" />
+        <p style="font-size:0.8rem;color:var(--muted);margin-top:0.35rem;">Have an influencer's code? Enter it here — they earn 5% of this sale.</p>
+      </div>
+
       <div id="pay-alert"></div>
 
       <button id="pay-btn" class="btn btn-dark btn-full stripe-btn" onclick="handlePay('${listing.id}', '${listing.user_id}', ${price})">
@@ -95,12 +101,15 @@
   async function handlePay(listingId, sellerId, amount) {
     const btn = document.getElementById('pay-btn');
     const alertEl = document.getElementById('pay-alert');
+    const referralCode = (document.getElementById('referral-code')?.value || '').trim().toLowerCase() || null;
+    const referralPayout = referralCode ? +(amount * 0.05).toFixed(2) : 0;
+
     btn.disabled = true;
     btn.textContent = 'Redirecting to Stripe...';
 
     // TODO: Call Supabase Edge Function to create Stripe Checkout session
     // const { data } = await supabase.functions.invoke('create-checkout-session', {
-    //   body: { listingId, sellerId, amount }
+    //   body: { listingId, sellerId, amount, referralCode, referralPayout }
     // });
     // window.location.href = data.url;
 

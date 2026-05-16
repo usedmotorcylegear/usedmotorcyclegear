@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Referral Program — Used Motorcycle Gear</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .referral-page { max-width: 680px; margin: 3rem auto; padding: 0 1.5rem 5rem; }
+
+    .referral-hero {
+      background: var(--text);
+      color: #fff;
+      padding: 2.5rem 2rem;
+      margin-bottom: 2rem;
+    }
+    .referral-hero .eyebrow {
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--primary);
+      margin-bottom: 0.75rem;
+    }
+    .referral-hero h1 { font-size: 1.8rem; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 0.75rem; }
+    .referral-hero p { font-size: 0.95rem; color: #c8c2bb; line-height: 1.7; }
+
+    .referral-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      padding: 2rem;
+      margin-bottom: 1.25rem;
+    }
+    .referral-card h2 { font-size: 1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 1.25rem; }
+
+    .code-display {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      padding: 1rem 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .code-display .code-text {
+      flex: 1;
+      font-size: 1.6rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      color: var(--text);
+      text-transform: uppercase;
+      font-family: monospace;
+    }
+    .code-display .copy-btn {
+      background: var(--text);
+      color: #fff;
+      border: none;
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      flex-shrink: 0;
+    }
+    .code-display .copy-btn:hover { background: var(--primary); }
+
+    .share-link {
+      font-size: 0.85rem;
+      color: var(--muted);
+      word-break: break-all;
+      margin-bottom: 0.5rem;
+    }
+    .share-link span { color: var(--primary); font-weight: 600; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      margin-bottom: 1.25rem;
+    }
+    .stat-box {
+      background: #fff;
+      padding: 1.25rem 1rem;
+      text-align: center;
+    }
+    .stat-num { font-size: 2rem; font-weight: 900; letter-spacing: -0.03em; color: var(--text); }
+    .stat-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-top: 0.25rem; }
+    .stat-note { font-size: 0.7rem; color: var(--muted); margin-top: 0.2rem; }
+
+    .how-it-works { border-top: 2px solid var(--text); padding-top: 1.5rem; }
+    .hiw-step { display: flex; gap: 1rem; padding: 0.9rem 0; border-bottom: 1px solid var(--border); }
+    .hiw-step:last-child { border-bottom: none; }
+    .hiw-num { font-size: 0.72rem; font-weight: 800; color: var(--muted); width: 20px; flex-shrink: 0; padding-top: 2px; }
+    .hiw-step h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.2rem; }
+    .hiw-step p { font-size: 0.875rem; color: var(--muted); line-height: 1.6; }
+
+    .payout-note {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 1rem 1.25rem;
+      font-size: 0.875rem;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-top: 1.25rem;
+    }
+
+    #generate-section { text-align: center; padding: 2rem 0; }
+    #generate-section p { color: var(--muted); margin-bottom: 1.25rem; font-size: 0.95rem; }
+
+    @media (max-width: 768px) {
+      .stats-grid { grid-template-columns: 1fr 1fr 1fr; }
+      .stat-num { font-size: 1.5rem; }
+      .code-display .code-text { font-size: 1.2rem; }
+    }
+    @media (max-width: 480px) {
+      .stats-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">used<span>motorcyclegear</span>.com</a>
+  <ul class="nav-links">
+    <li><a href="browse.html">Browse</a></li>
+    <li><a href="how-it-works.html">How It Works</a></li>
+    <li id="nav-auth-link"><a href="auth.html">Sign In</a></li>
+    <li id="nav-messages-link" style="display:none"><a href="inbox.html">Messages</a></li>
+    <li id="nav-orders-link" style="display:none"><a href="orders.html">Orders</a></li>
+    <li><a href="post.html" class="btn-nav">+ Sell Gear</a></li>
+  </ul>
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div class="referral-page">
+
+  <div class="referral-hero">
+    <div class="eyebrow">Referral Program</div>
+    <h1>Share your code.<br>Earn on every sale.</h1>
+    <p>Get 5% of every purchase made by someone who uses your code — whether they're listing gear or buying it. No cap, no expiry.</p>
+  </div>
+
+  <div id="alert"></div>
+  <div id="code-section"><div class="loading">Loading...</div></div>
+
+  <div class="referral-card">
+    <div class="how-it-works">
+      <div class="hiw-step">
+        <div class="hiw-num">01</div>
+        <div>
+          <h3>Get your code</h3>
+          <p>Every account gets one unique referral code. Share it anywhere — Instagram, YouTube, TikTok, wherever your audience is.</p>
+        </div>
+      </div>
+      <div class="hiw-step">
+        <div class="hiw-num">02</div>
+        <div>
+          <h3>Your audience uses it</h3>
+          <p>When someone lists or buys gear, they enter your code at checkout or on the listing form. That sale gets credited to you.</p>
+        </div>
+      </div>
+      <div class="hiw-step">
+        <div class="hiw-num">03</div>
+        <div>
+          <h3>You earn 5%</h3>
+          <p>5% of the final sale price goes to you. We track it automatically. Payouts go through Stripe once the sale completes.</p>
+        </div>
+      </div>
+    </div>
+    <div class="payout-note">
+      Earnings are calculated at 5% of the buyer's total and paid out after the 3-day buyer protection window closes. We'll contact you to set up your payout method.
+    </div>
+  </div>
+
+</div>
+
+<footer>&copy; 2026 usedmotorcyclegear.com — Ride safe.</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  let currentUser = null;
+
+  function showAlert(msg, type) {
+    document.getElementById('alert').innerHTML = msg
+      ? `<div class="alert alert-${type}" style="margin-bottom:1rem;">${msg}</div>` : '';
+  }
+
+  async function load() {
+    currentUser = await requireAuth();
+    const section = document.getElementById('code-section');
+
+    const { data: codeRow } = await supabase
+      .from('referral_codes')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .single();
+
+    if (codeRow) {
+      await showDashboard(codeRow.code, section);
+    } else {
+      showGeneratePrompt(section);
+    }
+  }
+
+  function showGeneratePrompt(section) {
+    section.innerHTML = `
+      <div class="referral-card">
+        <div id="generate-section">
+          <p>You don't have a referral code yet. Generate yours to start earning.</p>
+          <button class="btn btn-primary" onclick="generateCode()">Get My Referral Code</button>
+        </div>
+      </div>`;
+  }
+
+  async function generateCode() {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', currentUser.id)
+      .single();
+
+    let base = (profile?.username || 'rider').toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (!base) base = 'rider';
+
+    let code = base;
+    const { data: taken } = await supabase.from('referral_codes').select('code').eq('code', code).maybeSingle();
+    if (taken) code = base + Math.floor(Math.random() * 900 + 100);
+
+    const { error } = await supabase.from('referral_codes').insert({ user_id: currentUser.id, code });
+    if (error) {
+      showAlert('Could not generate code. Please try again.', 'error');
+      return;
+    }
+    const section = document.getElementById('code-section');
+    await showDashboard(code, section);
+  }
+
+  async function showDashboard(code, section) {
+    const [{ data: orderRows }, { data: listingRows }] = await Promise.all([
+      supabase.from('orders').select('price, status').eq('referral_code', code),
+      supabase.from('listings').select('id, price, status').eq('referral_code', code),
+    ]);
+
+    const orders = orderRows || [];
+    const listings = listingRows || [];
+
+    const timesUsed = orders.length + listings.length;
+    const pendingEarnings = orders
+      .filter(o => o.status !== 'complete')
+      .reduce((sum, o) => sum + (Number(o.price) * 0.05), 0);
+    const totalEarned = orders
+      .filter(o => o.status === 'complete')
+      .reduce((sum, o) => sum + (Number(o.price) * 0.05), 0);
+
+    const shareUrl = `${window.location.origin}/browse.html?ref=${code}`;
+
+    section.innerHTML = `
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-num">${timesUsed}</div>
+          <div class="stat-label">Times Used</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">$${pendingEarnings.toFixed(2)}</div>
+          <div class="stat-label">Pending</div>
+          <div class="stat-note">awaiting payout</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">$${totalEarned.toFixed(2)}</div>
+          <div class="stat-label">Total Earned</div>
+        </div>
+      </div>
+
+      <div class="referral-card">
+        <h2>Your Code</h2>
+        <div class="code-display">
+          <div class="code-text">${code}</div>
+          <button class="copy-btn" onclick="copyCode('${code}')">Copy</button>
+        </div>
+        <div class="share-link">Share link: <span>${shareUrl}</span></div>
+        <button class="btn btn-outline" style="margin-top:0.75rem; font-size:0.85rem; padding:0.5rem 1rem;" onclick="copyLink('${shareUrl}')">Copy Link</button>
+      </div>
+    `;
+  }
+
+  function copyCode(code) {
+    navigator.clipboard.writeText(code).then(() => showAlert('Code copied!', 'success'));
+    setTimeout(() => showAlert('', ''), 2000);
+  }
+
+  function copyLink(url) {
+    navigator.clipboard.writeText(url).then(() => showAlert('Link copied!', 'success'));
+    setTimeout(() => showAlert('', ''), 2000);
+  }
+
+  load();
+</script>
+</body>
+</html>
