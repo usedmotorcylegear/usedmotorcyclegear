@@ -48,6 +48,7 @@
 <script src="js/auth.js"></script>
 <script>
   const listingId = new URLSearchParams(window.location.search).get('id');
+  const offerPrice = new URLSearchParams(window.location.search).get('offer');
   const FEE_RATE = 0.1333;
 
   async function load() {
@@ -58,7 +59,7 @@
     if (!listing) { content.innerHTML = '<p>Listing not found.</p>'; return; }
 
     document.getElementById('back-link').href = `listing.html?id=${listingId}`;
-    const price = Number(listing.price);
+    const price = offerPrice ? Number(offerPrice) : Number(listing.price);
     const fee = +(price * FEE_RATE).toFixed(2);
     const sellerGets = +(price - fee).toFixed(2);
 
@@ -73,7 +74,7 @@
         </div>
       </div>
 
-      <div class="price-row"><span>Item price</span><span>$${price.toLocaleString()}</span></div>
+      ${offerPrice ? `<div class="price-row" style="color:var(--success);"><span>Accepted offer price</span><span>$${price.toLocaleString()}</span></div>` : `<div class="price-row"><span>Item price</span><span>$${price.toLocaleString()}</span></div>`}
       <div class="price-row"><span class="muted">Buyer protection fee</span><span class="muted">$0.00</span></div>
       <div class="price-row total"><span>Total</span><span>$${price.toLocaleString()}</span></div>
 

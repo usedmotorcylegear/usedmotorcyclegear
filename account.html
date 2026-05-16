@@ -49,6 +49,18 @@
         <div id="messages-list"><div class="loading">Loading...</div></div>
       </section>
 
+      <!-- OFFERS RECEIVED -->
+      <section id="offers-received" style="margin-top:3rem;">
+        <div class="account-section-title">Offers Received</div>
+        <div id="offers-received-list"><div class="loading">Loading...</div></div>
+      </section>
+
+      <!-- MY OFFERS -->
+      <section id="my-offers" style="margin-top:3rem;">
+        <div class="account-section-title">My Offers</div>
+        <div id="my-offers-list"><div class="loading">Loading...</div></div>
+      </section>
+
       <!-- MY PURCHASES -->
       <section id="orders" style="margin-top:3rem;">
         <div class="account-section-title">My Purchases</div>
@@ -125,6 +137,8 @@
     loadMessages();
     loadOrders();
     loadSales();
+    loadOffersReceived();
+    loadMyOffers();
   }
 
   async function loadMyListings() {
@@ -231,6 +245,77 @@
     if (unread.length > 0) {
       await supabase.from('messages').update({ read: true }).in('id', unread);
     }
+  }
+
+  async function loadOffersReceived() {
+    const container = document.getElementById('offers-received-list');
+    const { data, error } = await supabase
+      .from('offers')
+      .select('*, listings(title, id)')
+      .eq('seller_id', currentUser.id)
+      .order('created_at', { ascending: false });
+
+    if (error || !data || data.length === 0) {
+      container.innerHTML = '<p style="color:var(--muted); font-size:0.9rem;">No offers received yet.</p>';
+      return;
+    }
+
+    container.innerHTML = data.map(offer => `
+      <div class="my-listing-row" style="flex-wrap:wrap; gap:0.75rem;">
+        <div class="my-listing-info">
+          <div class="my-listing-title">${offer.listings?.title || 'Listing'}</div>
+          <div class="my-listing-price">Offer: $${Number(offer.amount).toLocaleString()}</div>
+          <div style="font-size:0.8rem; color:var(--muted); margin-top:0.2rem;">${new Date(offer.created_at).toLocaleDateString()}</div>
+        </div>
+        ${offer.status === 'pending' ? `
+          <div style="display:flex; gap:0.5rem; flex-shrink:0;">
+            <button class="btn btn-dark" style="padding:0.4rem 0.9rem; font-size:0.85rem;" onclick="respondToOffer('${offer.id}', '${offer.buyer_id}', '${offer.listing_id}', ${offer.amount}, 'accepted')">Accept</button>
+            <button class="btn btn-danger" style="padding:0.4rem 0.9rem; font-size:0.85rem;" onclick="respondToOffer('${offer.id}', '${offer.buyer_id}', '${offer.listing_id}', ${offer.amount}, 'declined')">Decline</button>
+          </div>` : `<span style="font-size:0.85rem; font-weight:600; color:${offer.status === 'accepted' ? 'var(--success)' : 'var(--danger)'};">${offer.status.charAt(0).toUpperCase() + offer.status.slice(1)}</span>`}
+      </div>
+    `).join('');
+  }
+
+  async function respondToOffer(offerId, buyerId, listingId, amount, status) {
+    const { error } = await supabase.from('offers').update({ status }).eq('id', offerId);
+    if (error) { alert('Error updating offer.'); return; }
+    if (status === 'accepted') {
+      await supabase.from('messages').insert({
+        listing_id: listingId,
+        sender_id: currentUser.id,
+        recipient_id: buyerId,
+        body: `Your offer of $${Number(amount).toLocaleString()} has been accepted! Click here to complete your purchase: ${window.location.origin}/checkout.html?id=${listingId}&offer=${amount}`
+      });
+    }
+    loadOffersReceived();
+  }
+
+  async function loadMyOffers() {
+    const container = document.getElementById('my-offers-list');
+    const { data, error } = await supabase
+      .from('offers')
+      .select('*, listings(title, id)')
+      .eq('buyer_id', currentUser.id)
+      .order('created_at', { ascending: false });
+
+    if (error || !data || data.length === 0) {
+      container.innerHTML = '<p style="color:var(--muted); font-size:0.9rem;">No offers made yet.</p>';
+      return;
+    }
+
+    container.innerHTML = data.map(offer => `
+      <div class="my-listing-row">
+        <div class="my-listing-info">
+          <div class="my-listing-title">${offer.listings?.title || 'Listing'}</div>
+          <div class="my-listing-price">Your offer: $${Number(offer.amount).toLocaleString()}</div>
+          <div style="font-size:0.8rem; color:var(--muted); margin-top:0.2rem;">${new Date(offer.created_at).toLocaleDateString()}</div>
+        </div>
+        <span style="font-size:0.85rem; font-weight:700; flex-shrink:0; color:${offer.status === 'accepted' ? 'var(--success)' : offer.status === 'declined' ? 'var(--danger)' : 'var(--muted)'};">
+          ${offer.status === 'accepted' ? '✓ Accepted' : offer.status === 'declined' ? '✗ Declined' : 'Pending'}
+        </span>
+        ${offer.status === 'accepted' ? `<a href="checkout.html?id=${offer.listing_id}&offer=${offer.amount}" class="btn btn-primary" style="padding:0.4rem 0.9rem; font-size:0.85rem;">Complete Purchase</a>` : ''}
+      </div>
+    `).join('');
   }
 
   async function loadOrders() {
