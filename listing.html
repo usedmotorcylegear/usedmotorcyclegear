@@ -123,14 +123,15 @@
       contactEl.innerHTML = '<p style="color:var(--muted); font-size:0.9rem;">This is your listing.</p>';
     } else if (currentUser) {
       contactEl.innerHTML = `
+        <a href="checkout.html?id=${listing.id}" class="btn btn-primary btn-full" style="margin-bottom:0.75rem; display:block; text-align:center;">Buy Now — $${Number(listing.price).toLocaleString()}</a>
         <div id="msg-form">
-          <textarea id="msg-body" placeholder="Write a message to the seller..." style="width:100%; margin-bottom:0.75rem;"></textarea>
-          <button id="send-btn" class="btn btn-dark btn-full">Send Message</button>
+          <textarea id="msg-body" placeholder="Have a question? Message the seller..." style="width:100%; margin-bottom:0.75rem;"></textarea>
+          <button id="send-btn" class="btn btn-outline btn-full">Send Message</button>
           <div id="msg-alert" style="margin-top:0.6rem;"></div>
         </div>`;
       document.getElementById('send-btn').addEventListener('click', () => sendMessage(listing.user_id));
     } else {
-      contactEl.innerHTML = `<a href="auth.html?next=listing.html%3Fid%3D${id}" class="btn btn-dark btn-full">Sign in to Message Seller</a>`;
+      contactEl.innerHTML = `<a href="auth.html?next=listing.html%3Fid%3D${id}" class="btn btn-dark btn-full">Sign in to Buy or Message</a>`;
     }
   }
 

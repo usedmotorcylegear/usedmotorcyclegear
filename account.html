@@ -49,6 +49,18 @@
         <div id="messages-list"><div class="loading">Loading...</div></div>
       </section>
 
+      <!-- MY PURCHASES -->
+      <section id="orders" style="margin-top:3rem;">
+        <div class="account-section-title">My Purchases</div>
+        <div id="orders-list"><div class="loading">Loading...</div></div>
+      </section>
+
+      <!-- SALES / SHIPPING -->
+      <section id="sales" style="margin-top:3rem;">
+        <div class="account-section-title">Sales — Ship & Track</div>
+        <div id="sales-list"><div class="loading">Loading...</div></div>
+      </section>
+
       <!-- EDIT PROFILE -->
       <section id="profile" style="margin-top:3rem;">
         <div class="account-section-title">Edit Profile</div>
@@ -111,6 +123,8 @@
 
     loadMyListings();
     loadMessages();
+    loadOrders();
+    loadSales();
   }
 
   async function loadMyListings() {
@@ -217,6 +231,87 @@
     if (unread.length > 0) {
       await supabase.from('messages').update({ read: true }).in('id', unread);
     }
+  }
+
+  async function loadOrders() {
+    const container = document.getElementById('orders-list');
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*, listings(title)')
+      .eq('buyer_id', currentUser.id)
+      .order('created_at', { ascending: false });
+
+    if (error || !data || data.length === 0) {
+      container.innerHTML = '<p style="color:var(--muted); font-size:0.9rem;">No purchases yet.</p>';
+      return;
+    }
+
+    container.innerHTML = data.map(order => `
+      <div class="my-listing-row">
+        <div class="my-listing-info">
+          <div class="my-listing-title">${order.listings?.title || 'Item'}</div>
+          <div class="my-listing-price">$${Number(order.amount).toLocaleString()}</div>
+          <div style="font-size:0.8rem; color:var(--muted); margin-top:0.2rem;">
+            Status: <strong>${formatStatus(order.status)}</strong>
+            ${order.tracking_number ? ` &middot; Tracking: <strong>${order.tracking_number}</strong>` : ''}
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function loadSales() {
+    const container = document.getElementById('sales-list');
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*, listings(title)')
+      .eq('seller_id', currentUser.id)
+      .order('created_at', { ascending: false });
+
+    if (error || !data || data.length === 0) {
+      container.innerHTML = '<p style="color:var(--muted); font-size:0.9rem;">No sales yet.</p>';
+      return;
+    }
+
+    container.innerHTML = data.map(order => `
+      <div class="my-listing-row" style="flex-wrap:wrap; gap:0.75rem;">
+        <div class="my-listing-info">
+          <div class="my-listing-title">${order.listings?.title || 'Item'}</div>
+          <div class="my-listing-price">You receive: $${Number(order.seller_payout).toLocaleString()}</div>
+          <div style="font-size:0.8rem; color:var(--muted); margin-top:0.2rem;">Status: <strong>${formatStatus(order.status)}</strong></div>
+        </div>
+        ${order.status === 'paid' && !order.tracking_number ? `
+          <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+            <input type="text" id="tracking-${order.id}" placeholder="Enter tracking number" style="width:200px;" />
+            <button class="btn btn-dark" style="padding:0.45rem 0.9rem; font-size:0.85rem;" onclick="submitTracking('${order.id}')">Mark Shipped</button>
+          </div>` : ''}
+        ${order.tracking_number ? `<div style="font-size:0.85rem; color:var(--success);">Shipped — Tracking: ${order.tracking_number}</div>` : ''}
+      </div>
+    `).join('');
+  }
+
+  async function submitTracking(orderId) {
+    const tracking = document.getElementById(`tracking-${orderId}`).value.trim();
+    if (!tracking) return alert('Please enter a tracking number.');
+    const { error } = await supabase.from('orders').update({
+      tracking_number: tracking,
+      status: 'shipped',
+      shipped_at: new Date().toISOString()
+    }).eq('id', orderId);
+    if (!error) loadSales();
+    else alert('Error saving tracking number.');
+  }
+
+  function formatStatus(status) {
+    const map = {
+      pending_payment: 'Awaiting Payment',
+      paid: 'Paid — Awaiting Shipment',
+      shipped: 'Shipped',
+      delivered: 'Delivered',
+      complete: 'Complete',
+      disputed: 'Disputed'
+    };
+    return map[status] || status;
   }
 
   document.getElementById('signout-btn').addEventListener('click', async (e) => {
