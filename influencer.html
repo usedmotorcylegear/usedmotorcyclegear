@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Referral Program — Used Motorcycle Gear</title>
+  <title>Influencer Program — Used Motorcycle Gear</title>
   <link rel="stylesheet" href="css/style.css" />
   <style>
-    .referral-page { max-width: 680px; margin: 3rem auto; padding: 0 1.5rem 5rem; }
+    .influencer-page { max-width: 680px; margin: 3rem auto; padding: 0 1.5rem 5rem; }
 
-    .referral-hero {
+    .influencer-hero {
       background: var(--text);
       color: #fff;
       padding: 2.5rem 2rem;
       margin-bottom: 2rem;
     }
-    .referral-hero .eyebrow {
+    .influencer-hero .eyebrow {
       font-size: 0.72rem;
       font-weight: 800;
       letter-spacing: 0.15em;
@@ -22,16 +22,16 @@
       color: var(--primary);
       margin-bottom: 0.75rem;
     }
-    .referral-hero h1 { font-size: 1.8rem; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 0.75rem; }
-    .referral-hero p { font-size: 0.95rem; color: #c8c2bb; line-height: 1.7; }
+    .influencer-hero h1 { font-size: 1.8rem; font-weight: 900; letter-spacing: -0.03em; margin-bottom: 0.75rem; }
+    .influencer-hero p { font-size: 0.95rem; color: #c8c2bb; line-height: 1.7; }
 
-    .referral-card {
+    .influencer-card {
       background: #fff;
       border: 1px solid var(--border);
       padding: 2rem;
       margin-bottom: 1.25rem;
     }
-    .referral-card h2 { font-size: 1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 1.25rem; }
+    .influencer-card h2 { font-size: 1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 1.25rem; }
 
     .code-display {
       display: flex;
@@ -106,9 +106,6 @@
       margin-top: 1.25rem;
     }
 
-    #generate-section { text-align: center; padding: 2rem 0; }
-    #generate-section p { color: var(--muted); margin-bottom: 1.25rem; font-size: 0.95rem; }
-
     @media (max-width: 768px) {
       .stats-grid { grid-template-columns: 1fr 1fr 1fr; }
       .stat-num { font-size: 1.5rem; }
@@ -136,10 +133,10 @@
   </button>
 </nav>
 
-<div class="referral-page">
+<div class="influencer-page">
 
-  <div class="referral-hero">
-    <div class="eyebrow">Referral Program</div>
+  <div class="influencer-hero">
+    <div class="eyebrow">Influencer Program</div>
     <h1>Share your code.<br>Earn on every sale.</h1>
     <p>Get 5% of every purchase made by someone who uses your code — whether they're listing gear or buying it. No cap, no expiry.</p>
   </div>
@@ -147,13 +144,13 @@
   <div id="alert"></div>
   <div id="code-section"><div class="loading">Loading...</div></div>
 
-  <div class="referral-card">
+  <div class="influencer-card">
     <div class="how-it-works">
       <div class="hiw-step">
         <div class="hiw-num">01</div>
         <div>
           <h3>Get your code</h3>
-          <p>Every account gets one unique referral code. Share it anywhere — Instagram, YouTube, TikTok, wherever your audience is.</p>
+          <p>Every account gets one unique code. Share it anywhere — Instagram, YouTube, TikTok, wherever your audience is.</p>
         </div>
       </div>
       <div class="hiw-step">
@@ -210,7 +207,7 @@
 
   function showGeneratePrompt(section) {
     section.innerHTML = `
-      <div class="referral-card">
+      <div class="influencer-card">
         <h2>Choose Your Code</h2>
         <p style="font-size:0.9rem;color:var(--muted);margin-bottom:1.25rem;">Pick something your audience will recognise — your name, handle, or brand. Letters and numbers only.</p>
         <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem;">
@@ -307,7 +304,7 @@
         </div>
       </div>
 
-      <div class="referral-card">
+      <div class="influencer-card">
         <h2>Your Code</h2>
         <div class="code-display">
           <div class="code-text">${code}</div>
