@@ -8,7 +8,7 @@ async function updateNavForUser() {
   const link = document.getElementById('nav-auth-link');
   if (!link) return;
   if (user) {
-    link.innerHTML = `<a href="account.html#messages">Messages</a></li><li><a href="account.html">My Account</a>`;
+    link.innerHTML = `<a href="account.html">My Account</a></li><li><a href="account.html#messages">Messages</a>`;
   } else {
     link.innerHTML = `<a href="auth.html">Sign In</a>`;
   }
