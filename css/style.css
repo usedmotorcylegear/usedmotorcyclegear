@@ -453,6 +453,7 @@ select.filter-select:focus { outline: none; border-color: var(--text); }
   /* LISTING DETAIL */
   .listing-detail { padding: 0 1.25rem; margin: 1.5rem 0; }
   .listing-detail-grid { grid-template-columns: 1fr; gap: 2rem; }
+  .listing-detail-grid > div:last-child { order: -1; }
   .listing-detail-title { font-size: 1.4rem; }
   .listing-detail-price { font-size: 1.75rem; }
   .seller-card { position: static; top: auto; }
