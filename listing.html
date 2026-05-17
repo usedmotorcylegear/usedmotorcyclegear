@@ -84,7 +84,7 @@
 
     content.innerHTML = `
       <div class="listing-detail-grid">
-        <div>
+        <div class="ldg-images">
           <div class="listing-images">
             ${mainImg
               ? `<img id="main-img" src="${mainImg}" alt="${listing.title}" />`
@@ -94,30 +94,9 @@
                 ${images.map((img, i) => `<img src="${img}" class="${i === 0 ? 'active' : ''}" onclick="setMain('${img}', this)" />`).join('')}
               </div>` : ''}
           </div>
-
-          <div class="detail-section" style="margin-top:1.5rem;">
-            <h3>Description</h3>
-            <p>${listing.description ? listing.description.replace(/\n/g, '<br>') : 'No description provided.'}</p>
-          </div>
-
-          <div class="detail-section">
-            <h3>Details</h3>
-            <p>
-              <strong>Category:</strong> ${listing.category}<br/>
-              <strong>Condition:</strong> ${listing.condition}<br/>
-              <strong>Location:</strong> ${listing.location || 'Not specified'}<br/>
-              <strong>Posted:</strong> ${new Date(listing.created_at).toLocaleDateString()}
-            </p>
-          </div>
-
-          ${isOwner ? `
-            <div style="margin-top:1.5rem; display:flex; gap:0.75rem;">
-              <a href="post.html?edit=${listing.id}" class="btn btn-outline">Edit Listing</a>
-              <button class="btn btn-danger" onclick="deleteListing('${listing.id}')">Delete</button>
-            </div>` : ''}
         </div>
 
-        <div>
+        <div class="ldg-sidebar">
           <div class="seller-card">
             <div class="listing-detail-title">${listing.title}</div>
             <div class="listing-detail-price">$<span class="price-amount">${Number(listing.price).toLocaleString()}</span></div>
@@ -139,6 +118,29 @@
 
             <div id="contact-section"></div>
           </div>
+        </div>
+
+        <div class="ldg-info">
+          <div class="detail-section" style="margin-top:0;">
+            <h3>Description</h3>
+            <p>${listing.description ? listing.description.replace(/\n/g, '<br>') : 'No description provided.'}</p>
+          </div>
+
+          <div class="detail-section">
+            <h3>Details</h3>
+            <p>
+              <strong>Category:</strong> ${listing.category}<br/>
+              <strong>Condition:</strong> ${listing.condition}<br/>
+              <strong>Location:</strong> ${listing.location || 'Not specified'}<br/>
+              <strong>Posted:</strong> ${new Date(listing.created_at).toLocaleDateString()}
+            </p>
+          </div>
+
+          ${isOwner ? `
+            <div style="margin-top:1.5rem; display:flex; gap:0.75rem;">
+              <a href="post.html?edit=${listing.id}" class="btn btn-outline">Edit Listing</a>
+              <button class="btn btn-danger" onclick="deleteListing('${listing.id}')">Delete</button>
+            </div>` : ''}
         </div>
       </div>
     `;
