@@ -70,7 +70,7 @@
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('username, full_name, location, phone')
+      .select('username, full_name, location')
       .eq('id', listing.user_id)
       .single();
 
