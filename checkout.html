@@ -108,8 +108,9 @@
     btn.textContent = 'Redirecting to Stripe...';
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
       const { data, error } = await supabase.functions.invoke('create-checkout-session', {
-        body: { listingId, sellerId, amount, referralCode, referralPayout, listingTitle }
+        body: { listingId, sellerId, buyerId: user.id, amount, referralCode, referralPayout, listingTitle }
       });
 
       if (error || !data?.url) throw new Error(error?.message || 'Failed to create checkout session');

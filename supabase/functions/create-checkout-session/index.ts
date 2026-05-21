@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { listingId, sellerId, amount, referralCode, referralPayout, listingTitle } = await req.json();
+    const { listingId, sellerId, buyerId, amount, referralCode, referralPayout, listingTitle } = await req.json();
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -31,6 +31,7 @@ Deno.serve(async (req) => {
       metadata: {
         listing_id: listingId,
         seller_id: sellerId,
+        buyer_id: buyerId,
         referral_code: referralCode || '',
         referral_payout: String(referralPayout || 0),
       },

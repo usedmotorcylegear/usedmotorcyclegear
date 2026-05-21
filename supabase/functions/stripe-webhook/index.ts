@@ -21,20 +21,16 @@ Deno.serve(async (req) => {
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.CheckoutSession;
-    const { listing_id, seller_id, referral_code, referral_payout } = session.metadata!;
+    const { listing_id, seller_id, buyer_id, referral_code, referral_payout } = session.metadata!;
     const amount = session.amount_total! / 100;
     const fee = +(amount * 0.1333).toFixed(2);
     const seller_payout = +(amount - fee).toFixed(2);
-
-    // Find buyer by email
-    const { data: { users } } = await supabase.auth.admin.listUsers();
-    const buyer = users?.find(u => u.email === session.customer_details?.email);
 
     // Create order record
     await supabase.from('orders').insert({
       listing_id,
       seller_id,
-      buyer_id: buyer?.id || null,
+      buyer_id,
       amount,
       fee,
       seller_payout,
