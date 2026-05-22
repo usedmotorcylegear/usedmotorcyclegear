@@ -23,16 +23,15 @@ Deno.serve(async (req) => {
     const session = event.data.object as Stripe.CheckoutSession;
     const { listing_id, seller_id, buyer_id, referral_code, referral_payout } = session.metadata!;
     const amount = session.amount_total! / 100;
-    const fee = +(amount * 0.1333).toFixed(2);
-    const seller_payout = +(amount - fee).toFixed(2);
+    const platform_fee = +(amount * 0.1333).toFixed(2);
+    const seller_payout = +(amount - platform_fee).toFixed(2);
 
-    // Create order record
-    await supabase.from('orders').insert({
+    const { error } = await supabase.from('orders').insert({
       listing_id,
       seller_id,
       buyer_id,
       amount,
-      fee,
+      platform_fee,
       seller_payout,
       referral_code: referral_code || null,
       referral_payout: Number(referral_payout) || 0,
@@ -40,8 +39,8 @@ Deno.serve(async (req) => {
       status: 'paid',
     });
 
-    // Mark listing as sold
-    await supabase.from('listings').update({ status: 'sold' }).eq('id', listing_id);
+    if (error) console.error('Order insert error:', error.message);
+    else await supabase.from('listings').update({ status: 'sold' }).eq('id', listing_id);
   }
 
   return new Response(JSON.stringify({ received: true }), {
