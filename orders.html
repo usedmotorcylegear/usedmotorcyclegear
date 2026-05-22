@@ -61,6 +61,13 @@
     .add-tracking-form input { flex: 1; min-width: 140px; }
     .add-tracking-form button { font-size: 0.82rem; padding: 0.4rem 0.9rem; background: var(--text); color: #fff; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap; }
     .add-tracking-form button:hover { background: var(--primary); }
+    .dispute-btn { font-size: 0.78rem; margin-top: 0.5rem; padding: 0.3rem 0.7rem; background: none; border: 1px solid var(--danger); color: var(--danger); border-radius: 4px; cursor: pointer; }
+    .dispute-btn:hover { background: var(--danger); color: #fff; }
+    .dispute-form { margin-top: 0.6rem; }
+    .dispute-form select, .dispute-form textarea { font-size: 0.82rem; width: 100%; margin-bottom: 0.4rem; padding: 0.4rem 0.6rem; border: 1px solid var(--border); border-radius: 4px; background: var(--bg); color: var(--text); }
+    .dispute-form textarea { min-height: 60px; resize: vertical; }
+    .dispute-form button { font-size: 0.82rem; padding: 0.4rem 0.9rem; background: var(--danger); color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+    .dispute-note { font-size: 0.8rem; color: var(--danger); margin-top: 0.3rem; font-weight: 600; }
   </style>
 </head>
 <body>
@@ -184,6 +191,37 @@
       }
     }
 
+    // Dispute button/form — show for both buyer and seller on active orders
+    let disputeHtml = '';
+    if (['shipped', 'delivered'].includes(order.status)) {
+      const role = type === 'purchase' ? 'buyer' : 'seller';
+      if (order.status === 'disputed') {
+        disputeHtml = `<div class="dispute-note">⚠️ Dispute filed: ${order.dispute_reason || ''}</div>`;
+      } else {
+        disputeHtml = `
+          <button class="dispute-btn" onclick="toggleDispute('${order.id}')">Flag a Problem</button>
+          <div class="dispute-form" id="dispute-form-${order.id}" style="display:none">
+            <select id="dispute-reason-${order.id}">
+              <option value="">Select a reason…</option>
+              ${role === 'buyer' ? `
+              <option value="Item not received">Item not received</option>
+              <option value="Item not as described">Item not as described</option>
+              <option value="Item arrived damaged">Item arrived damaged</option>
+              <option value="Wrong item sent">Wrong item sent</option>
+              ` : `
+              <option value="Buyer claims non-delivery">Buyer claims non-delivery</option>
+              <option value="Buyer requesting return">Buyer requesting return</option>
+              <option value="Fraudulent chargeback">Fraudulent chargeback</option>
+              `}
+              <option value="Other">Other</option>
+            </select>
+            <textarea id="dispute-details-${order.id}" placeholder="Describe the issue…"></textarea>
+            <button onclick="submitDispute('${order.id}', '${role}')">Submit Dispute</button>
+          </div>
+          <div id="dispute-alert-${order.id}" style="font-size:0.8rem;margin-top:0.25rem;"></div>`;
+      }
+    }
+
     // Add tracking form for sellers who haven't shipped yet
     const addTrackingHtml = (type === 'sale' && order.status === 'paid') ? `
       <div class="add-tracking-form">
@@ -215,6 +253,7 @@
           ${payoutHtml}
           ${deliveryHtml}
           ${addTrackingHtml}
+          ${disputeHtml}
         </div>
         <span class="order-status ${statusClass}">${statusLabel}</span>
       </div>`;
@@ -238,6 +277,37 @@
     } else {
       alertEl.innerHTML = '<span style="color:var(--success)">Shipped! Tracking saved.</span>';
       setTimeout(() => load(), 1500);
+    }
+  }
+
+  function toggleDispute(orderId) {
+    const form = document.getElementById(`dispute-form-${orderId}`);
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+  }
+
+  async function submitDispute(orderId, role) {
+    const reasonEl = document.getElementById(`dispute-reason-${orderId}`);
+    const detailsEl = document.getElementById(`dispute-details-${orderId}`);
+    const alertEl = document.getElementById(`dispute-alert-${orderId}`);
+
+    const reason = reasonEl.value;
+    const details = detailsEl.value.trim();
+    if (!reason) { alertEl.innerHTML = '<span style="color:var(--danger)">Please select a reason.</span>'; return; }
+
+    const fullReason = details ? `${reason} — ${details}` : reason;
+    alertEl.innerHTML = 'Submitting…';
+
+    const { error } = await supabase.from('orders').update({
+      status: 'disputed',
+      dispute_reason: fullReason,
+      disputed_by: role,
+    }).eq('id', orderId);
+
+    if (error) {
+      alertEl.innerHTML = `<span style="color:var(--danger)">${error.message}</span>`;
+    } else {
+      alertEl.innerHTML = '<span style="color:var(--danger)">Dispute submitted. Our team will review within 1 business day.</span>';
+      setTimeout(() => load(), 2000);
     }
   }
 
