@@ -54,6 +54,13 @@
     .status-disputed  { background: #f8d7da; color: #721c24; }
     .tracking-note { font-size: 0.8rem; color: var(--success); margin-top: 0.3rem; font-weight: 600; }
     .empty-orders { padding: 3rem 0; text-align: center; color: var(--muted); font-size: 0.95rem; }
+    .payout-note { font-size: 0.8rem; color: var(--muted); margin-top: 0.3rem; }
+    .payout-ready { font-size: 0.8rem; color: var(--success); margin-top: 0.3rem; font-weight: 600; }
+    .add-tracking-form { margin-top: 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+    .add-tracking-form select, .add-tracking-form input { font-size: 0.82rem; padding: 0.4rem 0.6rem; border: 1px solid var(--border); border-radius: 4px; background: var(--bg); color: var(--text); }
+    .add-tracking-form input { flex: 1; min-width: 140px; }
+    .add-tracking-form button { font-size: 0.82rem; padding: 0.4rem 0.9rem; background: var(--text); color: #fff; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap; }
+    .add-tracking-form button:hover { background: var(--primary); }
   </style>
 </head>
 <body>
@@ -125,30 +132,78 @@
     const amount = type === 'sale'
       ? `You receive: $${Number(order.seller_payout).toLocaleString()}`
       : `$${Number(order.amount).toLocaleString()}`;
+
     const statusClass = {
-      pending_payment: 'status-pending',
-      paid:            'status-paid',
-      shipped:         'status-shipped',
-      delivered:       'status-delivered',
-      complete:        'status-complete',
-      disputed:        'status-disputed'
+      paid:      'status-paid',
+      shipped:   'status-shipped',
+      delivered: 'status-delivered',
+      complete:  'status-complete',
+      disputed:  'status-disputed'
     }[order.status] || 'status-pending';
+
     const statusLabel = {
-      pending_payment: 'Awaiting Payment',
-      paid:            'Paid',
-      shipped:         'Shipped',
-      delivered:       'Delivered',
-      complete:        'Complete',
-      disputed:        'Disputed'
+      paid:      'Paid — Awaiting Shipment',
+      shipped:   'Shipped',
+      delivered: 'Delivered',
+      complete:  'Complete',
+      disputed:  'Disputed'
     }[order.status] || order.status;
 
-    const tracking = order.tracking_number
-      ? `<div class="tracking-note">Tracking: ${order.tracking_number}</div>`
-      : '';
     const date = new Date(order.created_at).toLocaleDateString();
 
+    // Tracking display
+    let trackingHtml = '';
+    if (order.tracking_number) {
+      const carrierLinks = {
+        usps: `https://tools.usps.com/go/TrackConfirmAction?tLabels=${order.tracking_number}`,
+        ups: `https://www.ups.com/track?tracknum=${order.tracking_number}`,
+        fedex: `https://www.fedex.com/fedextrack/?trknbr=${order.tracking_number}`,
+        dhl: `https://www.dhl.com/us-en/home/tracking.html?tracking-id=${order.tracking_number}`,
+      };
+      const trackUrl = carrierLinks[order.carrier] || '#';
+      trackingHtml = `<div class="tracking-note">📦 <a href="${trackUrl}" target="_blank" style="color:var(--success);">${order.carrier?.toUpperCase() || ''} ${order.tracking_number}</a></div>`;
+    }
+
+    // Payout info for sellers
+    let payoutHtml = '';
+    if (type === 'sale') {
+      if (order.payout_status === 'ready' || order.status === 'complete') {
+        payoutHtml = `<div class="payout-ready">✅ Payout of $${Number(order.seller_payout).toLocaleString()} is being processed</div>`;
+      } else if (order.delivered_at && order.payout_due_at) {
+        const dueDate = new Date(order.payout_due_at).toLocaleDateString();
+        payoutHtml = `<div class="payout-note">Payout of $${Number(order.seller_payout).toLocaleString()} due ${dueDate}</div>`;
+      }
+    }
+
+    // Delivery countdown for buyers
+    let deliveryHtml = '';
+    if (type === 'purchase' && order.status === 'delivered' && order.payout_due_at) {
+      const daysLeft = Math.ceil((new Date(order.payout_due_at) - new Date()) / (1000 * 60 * 60 * 24));
+      if (daysLeft > 0) {
+        deliveryHtml = `<div class="payout-note">Funds release to seller in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}</div>`;
+      }
+    }
+
+    // Add tracking form for sellers who haven't shipped yet
+    const addTrackingHtml = (type === 'sale' && order.status === 'paid') ? `
+      <div class="add-tracking-form">
+        <select id="carrier-${order.id}">
+          <option value="auto">Auto-detect carrier</option>
+          <option value="usps">USPS</option>
+          <option value="ups">UPS</option>
+          <option value="fedex">FedEx</option>
+          <option value="dhl-express">DHL</option>
+          <option value="ontrac">OnTrac</option>
+          <option value="lasership">LaserShip</option>
+        </select>
+        <input type="text" id="tracking-${order.id}" placeholder="Tracking number" />
+        <button onclick="submitTracking('${order.id}')">Mark Shipped</button>
+      </div>
+      <div id="tracking-alert-${order.id}" style="font-size:0.8rem;margin-top:0.25rem;"></div>
+    ` : '';
+
     return `
-      <div class="order-row">
+      <div class="order-row" id="order-${order.id}">
         ${img
           ? `<img src="${img}" alt="${title}" />`
           : `<div class="order-thumb-placeholder">🏍️</div>`}
@@ -156,10 +211,34 @@
           <div class="order-title">${title}</div>
           <div class="order-price">${amount}</div>
           <div class="order-meta">${date}</div>
-          ${tracking}
+          ${trackingHtml}
+          ${payoutHtml}
+          ${deliveryHtml}
+          ${addTrackingHtml}
         </div>
         <span class="order-status ${statusClass}">${statusLabel}</span>
       </div>`;
+  }
+
+  async function submitTracking(orderId) {
+    const trackingNumber = document.getElementById(`tracking-${orderId}`).value.trim();
+    const carrier = document.getElementById(`carrier-${orderId}`).value;
+    const alertEl = document.getElementById(`tracking-alert-${orderId}`);
+
+    if (!trackingNumber) { alertEl.innerHTML = '<span style="color:var(--danger)">Enter a tracking number.</span>'; return; }
+
+    alertEl.innerHTML = 'Saving...';
+
+    const { error } = await supabase.functions.invoke('add-tracking', {
+      body: { orderId, trackingNumber, carrier }
+    });
+
+    if (error) {
+      alertEl.innerHTML = `<span style="color:var(--danger)">${error.message}</span>`;
+    } else {
+      alertEl.innerHTML = '<span style="color:var(--success)">Shipped! Tracking saved.</span>';
+      setTimeout(() => load(), 1500);
+    }
   }
 
   load();
