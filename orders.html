@@ -240,13 +240,17 @@
       <div id="tracking-alert-${order.id}" style="font-size:0.8rem;margin-top:0.25rem;"></div>
     ` : '';
 
+    const listingUrl = `listing.html?id=${order.listing_id}`;
+
     return `
       <div class="order-row" id="order-${order.id}">
-        ${img
-          ? `<img src="${img}" alt="${title}" />`
-          : `<div class="order-thumb-placeholder">🏍️</div>`}
+        <a href="${listingUrl}" style="flex-shrink:0; display:block;">
+          ${img
+            ? `<img src="${img}" alt="${title}" style="display:block;" />`
+            : `<div class="order-thumb-placeholder">🏍️</div>`}
+        </a>
         <div class="order-info">
-          <div class="order-title">${title}</div>
+          <div class="order-title"><a href="${listingUrl}" style="color:inherit; text-decoration:none;">${title}</a></div>
           <div class="order-price">${amount}</div>
           <div class="order-meta">${date}</div>
           ${trackingHtml}
