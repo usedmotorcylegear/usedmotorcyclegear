@@ -147,7 +147,9 @@
     `;
 
     const contactEl = document.getElementById('contact-section');
-    if (isOwner) {
+    if (listing.status === 'sold') {
+      contactEl.innerHTML = `<div class="btn btn-full" style="background:var(--border); color:var(--muted); text-align:center; padding:0.85rem; border-radius:6px; font-weight:800; font-size:1rem; cursor:default;">Sold</div>`;
+    } else if (isOwner) {
       contactEl.innerHTML = '<p style="color:var(--muted); font-size:0.9rem;">This is your listing.</p>';
     } else if (currentUser) {
       contactEl.innerHTML = `
