@@ -53,6 +53,13 @@ Deno.serve(async (_req) => {
       console.log(`Seller ${order.seller_id} has no Connect account — payout held as 'ready'`);
     }
 
+    // Send payout email to seller
+    await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}` },
+      body: JSON.stringify({ type: 'payout_released', orderId: order.id }),
+    });
+
     processed++;
   }
 

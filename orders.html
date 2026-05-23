@@ -305,6 +305,7 @@
       alertEl.innerHTML = `<span style="color:var(--danger)">${error.message}</span>`;
     } else {
       alertEl.innerHTML = '<span style="color:var(--success)">Shipped! Tracking saved.</span>';
+      supabase.functions.invoke('send-email', { body: { type: 'item_shipped', orderId } });
       setTimeout(() => load(), 1500);
     }
   }
@@ -327,6 +328,7 @@
       alertEl.innerHTML = `<span style="color:var(--danger)">${error.message}</span>`;
     } else {
       alertEl.innerHTML = '<span style="color:var(--success)">Got it! Funds release to seller in 3 days.</span>';
+      supabase.functions.invoke('send-email', { body: { type: 'delivery_confirmed', orderId } });
       setTimeout(() => load(), 1500);
     }
   }
@@ -358,6 +360,7 @@
       alertEl.innerHTML = `<span style="color:var(--danger)">${error.message}</span>`;
     } else {
       alertEl.innerHTML = '<span style="color:var(--danger)">Dispute submitted. Our team will review within 1 business day.</span>';
+      supabase.functions.invoke('send-email', { body: { type: 'dispute_filed', orderId } });
       setTimeout(() => load(), 2000);
     }
   }

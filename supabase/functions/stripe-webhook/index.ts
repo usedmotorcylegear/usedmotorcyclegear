@@ -39,8 +39,21 @@ Deno.serve(async (req) => {
       status: 'paid',
     });
 
-    if (error) console.error('Order insert error:', error.message);
-    else await supabase.from('listings').update({ status: 'sold' }).eq('id', listing_id);
+    if (error) {
+      console.error('Order insert error:', error.message);
+    } else {
+      await supabase.from('listings').update({ status: 'sold' }).eq('id', listing_id);
+
+      // Send order confirmation emails to buyer and seller
+      const { data: order } = await supabase.from('orders').select('id').eq('stripe_session_id', session.id).single();
+      if (order) {
+        await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-email`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}` },
+          body: JSON.stringify({ type: 'order_placed', orderId: order.id }),
+        });
+      }
+    }
   }
 
   return new Response(JSON.stringify({ received: true }), {
