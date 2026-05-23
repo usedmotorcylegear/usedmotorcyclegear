@@ -1,0 +1,20 @@
+name: Daily Payout Release
+
+on:
+  schedule:
+    - cron: '0 12 * * *'   # runs every day at noon UTC
+  workflow_dispatch:         # lets you trigger it manually from GitHub too
+
+jobs:
+  check-payouts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger check-payouts Edge Function
+        run: |
+          curl -X POST \
+            'https://gyftwcdsxjxswazdwnzu.supabase.co/functions/v1/check-payouts' \
+            -H 'Content-Type: application/json' \
+            -H 'Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}' \
+            -d '{}' \
+            --fail \
+            -s
