@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Used Motorcycle Gear</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    .admin-page { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem 6rem; }
+    .admin-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2.5rem; padding-bottom: 1.5rem; border-bottom: 2px solid var(--text); }
+    .admin-header h1 { font-size: 1.5rem; font-weight: 900; letter-spacing: -0.03em; }
+    .admin-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 2rem; }
+    .admin-tab { padding: 0.75rem 1.5rem; font-size: 0.875rem; font-weight: 700; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; color: var(--muted); background: none; border-top: none; border-left: none; border-right: none; }
+    .admin-tab.active { color: var(--text); border-bottom-color: var(--text); }
+    .admin-tab-panel { display: none; }
+    .admin-tab-panel.active { display: block; }
+    .admin-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    .admin-table th { text-align: left; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 0.6rem 1rem; border-bottom: 1px solid var(--border); }
+    .admin-table td { padding: 0.9rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .admin-table tr:hover td { background: var(--bg); }
+    .badge { font-size: 0.72rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 20px; white-space: nowrap; }
+    .badge-disputed  { background: #f8d7da; color: #721c24; }
+    .badge-paid      { background: #d1ecf1; color: #0c5460; }
+    .badge-shipped   { background: #d4edda; color: #155724; }
+    .badge-delivered { background: #d4edda; color: #155724; }
+    .badge-complete  { background: #e2e3e5; color: #383d41; }
+    .badge-failed    { background: #f8d7da; color: #721c24; }
+    .badge-ready     { background: #fff3cd; color: #856404; }
+    .action-btn { font-size: 0.78rem; padding: 0.3rem 0.7rem; border-radius: 4px; cursor: pointer; font-weight: 600; border: none; white-space: nowrap; }
+    .action-btn + .action-btn { margin-left: 0.4rem; }
+    .btn-release { background: var(--success); color: #fff; }
+    .btn-refund  { background: var(--danger); color: #fff; }
+    .btn-remove  { background: none; border: 1px solid var(--danger) !important; color: var(--danger); }
+    .dispute-reason { font-size: 0.8rem; color: var(--danger); font-weight: 600; margin-top: 0.2rem; }
+    .stat-row { display: flex; gap: 1.5rem; margin-bottom: 2rem; flex-wrap: wrap; }
+    .stat-card { flex: 1; min-width: 140px; padding: 1.25rem 1.5rem; border: 1px solid var(--border); border-radius: 4px; }
+    .stat-card .num { font-size: 2rem; font-weight: 900; letter-spacing: -0.03em; }
+    .stat-card .label { font-size: 0.78rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 0.2rem; }
+    .admin-alert { font-size: 0.82rem; margin-top: 0.3rem; }
+    .empty-admin { padding: 3rem; text-align: center; color: var(--muted); font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">used<span>motorcyclegear</span>.com</a>
+  <ul class="nav-links">
+    <li><a href="browse.html">Browse</a></li>
+    <li><a href="admin.html" style="color:var(--primary); font-weight:700;">Admin</a></li>
+    <li id="nav-auth-link"><a href="auth.html">Sign In</a></li>
+    <li id="nav-messages-link" style="display:none"><a href="inbox.html">Messages</a></li>
+    <li id="nav-orders-link" style="display:none"><a href="orders.html">Orders</a></li>
+    <li><a href="post.html" class="btn-nav">+ Sell Gear</a></li>
+  </ul>
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div class="admin-page">
+
+  <div class="admin-header">
+    <h1>Admin Dashboard</h1>
+    <span id="admin-email" style="font-size:0.85rem; color:var(--muted);"></span>
+  </div>
+
+  <div class="stat-row" id="stats-row">
+    <div class="stat-card"><div class="num" id="stat-disputes">—</div><div class="label">Open Disputes</div></div>
+    <div class="stat-card"><div class="num" id="stat-orders">—</div><div class="label">Total Orders</div></div>
+    <div class="stat-card"><div class="num" id="stat-payouts">—</div><div class="label">Payouts Held</div></div>
+    <div class="stat-card"><div class="num" id="stat-listings">—</div><div class="label">Active Listings</div></div>
+  </div>
+
+  <div class="admin-tabs">
+    <button class="admin-tab active" onclick="switchTab('disputes')">Disputes</button>
+    <button class="admin-tab" onclick="switchTab('orders')">All Orders</button>
+    <button class="admin-tab" onclick="switchTab('listings')">Listings</button>
+    <button class="admin-tab" onclick="switchTab('users')">Users</button>
+  </div>
+
+  <!-- DISPUTES -->
+  <div class="admin-tab-panel active" id="tab-disputes">
+    <div id="disputes-list"><div class="loading">Loading...</div></div>
+  </div>
+
+  <!-- ALL ORDERS -->
+  <div class="admin-tab-panel" id="tab-orders">
+    <div id="orders-list"><div class="loading">Loading...</div></div>
+  </div>
+
+  <!-- LISTINGS -->
+  <div class="admin-tab-panel" id="tab-listings">
+    <div id="listings-list"><div class="loading">Loading...</div></div>
+  </div>
+
+  <!-- USERS -->
+  <div class="admin-tab-panel" id="tab-users">
+    <div id="users-list"><div class="loading">Loading...</div></div>
+  </div>
+
+</div>
+
+<footer>
+  <div>&copy; 2026 usedmotorcyclegear.com &mdash; Ride safe.</div>
+  <div style="margin-top:0.5rem;"><a href="terms.html">Terms of Service</a> &nbsp;&middot;&nbsp; <a href="privacy.html">Privacy Policy</a></div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  async function init() {
+    const user = await requireAuth();
+
+    // Check admin status
+    const { data: profile } = await supabase.from('profiles').select('is_admin').eq('id', user.id).single();
+    if (!profile?.is_admin) {
+      window.location.href = 'index.html';
+      return;
+    }
+
+    document.getElementById('admin-email').textContent = user.email;
+
+    loadStats();
+    loadDisputes();
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.admin-tab').forEach((t, i) => t.classList.remove('active'));
+    document.querySelectorAll('.admin-tab-panel').forEach(p => p.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById(`tab-${tab}`).classList.add('active');
+
+    if (tab === 'disputes') loadDisputes();
+    if (tab === 'orders') loadOrders();
+    if (tab === 'listings') loadListings();
+    if (tab === 'users') loadUsers();
+  }
+
+  async function loadStats() {
+    const [disputes, orders, payouts, listings] = await Promise.all([
+      supabase.from('orders').select('id', { count: 'exact' }).eq('status', 'disputed'),
+      supabase.from('orders').select('id', { count: 'exact' }),
+      supabase.from('orders').select('id', { count: 'exact' }).eq('payout_status', 'ready'),
+      supabase.from('listings').select('id', { count: 'exact' }).eq('status', 'active'),
+    ]);
+    document.getElementById('stat-disputes').textContent = disputes.count ?? '—';
+    document.getElementById('stat-orders').textContent = orders.count ?? '—';
+    document.getElementById('stat-payouts').textContent = payouts.count ?? '—';
+    document.getElementById('stat-listings').textContent = listings.count ?? '—';
+  }
+
+  async function loadDisputes() {
+    const container = document.getElementById('disputes-list');
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*, listings(title)')
+      .eq('status', 'disputed')
+      .order('created_at', { ascending: false });
+
+    if (error) { container.innerHTML = `<div class="empty-admin">Error: ${error.message}</div>`; return; }
+    if (!data || data.length === 0) { container.innerHTML = '<div class="empty-admin">No open disputes. 🎉</div>'; return; }
+
+    container.innerHTML = `
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Amount</th>
+            <th>Disputed By</th>
+            <th>Reason</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.map(o => `
+            <tr>
+              <td>
+                <a href="listing.html?id=${o.listing_id}" style="font-weight:700; color:var(--text);">${o.listings?.title || 'Item'}</a>
+              </td>
+              <td>$${Number(o.amount).toLocaleString()}</td>
+              <td>${o.disputed_by || '—'}</td>
+              <td><div class="dispute-reason">${o.dispute_reason || '—'}</div></td>
+              <td style="color:var(--muted);">${new Date(o.created_at).toLocaleDateString()}</td>
+              <td>
+                <button class="action-btn btn-release" onclick="resolveDispute('${o.id}', 'seller')">Release to Seller</button>
+                <button class="action-btn btn-refund" onclick="resolveDispute('${o.id}', 'buyer')">Refund Buyer</button>
+                <div id="dispute-alert-${o.id}" class="admin-alert"></div>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  async function resolveDispute(orderId, winner) {
+    const alertEl = document.getElementById(`dispute-alert-${orderId}`);
+    if (!confirm(`${winner === 'seller' ? 'Release funds to seller?' : 'Refund the buyer?'} This cannot be undone.`)) return;
+    alertEl.textContent = 'Processing...';
+
+    const update = winner === 'seller'
+      ? { status: 'complete', payout_status: 'ready' }
+      : { status: 'refunded', payout_status: 'refunded' };
+
+    const { error } = await supabase.from('orders').update(update).eq('id', orderId);
+
+    if (error) {
+      alertEl.innerHTML = `<span style="color:var(--danger)">${error.message}</span>`;
+    } else {
+      if (winner === 'buyer') {
+        alertEl.innerHTML = `<span style="color:var(--danger)">Marked refunded — go to <a href="https://dashboard.stripe.com" target="_blank" style="color:var(--danger);text-decoration:underline;">Stripe</a> to issue the refund.</span>`;
+      } else {
+        alertEl.innerHTML = `<span style="color:var(--success)">Released — payout will process tonight.</span>`;
+      }
+      loadStats();
+      setTimeout(() => loadDisputes(), 2500);
+    }
+  }
+
+  async function loadOrders() {
+    const container = document.getElementById('orders-list');
+    const { data, error } = await supabase
+      .from('orders')
+      .select('*, listings(title)')
+      .order('created_at', { ascending: false })
+      .limit(100);
+
+    if (error) { container.innerHTML = `<div class="empty-admin">Error: ${error.message}</div>`; return; }
+    if (!data || data.length === 0) { container.innerHTML = '<div class="empty-admin">No orders yet.</div>'; return; }
+
+    container.innerHTML = `
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Amount</th>
+            <th>Seller Payout</th>
+            <th>Status</th>
+            <th>Payout</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.map(o => `
+            <tr>
+              <td><a href="listing.html?id=${o.listing_id}" style="font-weight:700; color:var(--text);">${o.listings?.title || 'Item'}</a></td>
+              <td>$${Number(o.amount).toLocaleString()}</td>
+              <td>$${Number(o.seller_payout).toLocaleString()}</td>
+              <td><span class="badge badge-${o.status}">${o.status}</span></td>
+              <td><span class="badge badge-${o.payout_status || 'pending'}">${o.payout_status || 'pending'}</span></td>
+              <td style="color:var(--muted);">${new Date(o.created_at).toLocaleDateString()}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  async function loadListings() {
+    const container = document.getElementById('listings-list');
+    const { data, error } = await supabase
+      .from('listings')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100);
+
+    if (error) { container.innerHTML = `<div class="empty-admin">Error: ${error.message}</div>`; return; }
+    if (!data || data.length === 0) { container.innerHTML = '<div class="empty-admin">No listings.</div>'; return; }
+
+    container.innerHTML = `
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Price</th>
+            <th>Category</th>
+            <th>Condition</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.map(l => `
+            <tr>
+              <td><a href="listing.html?id=${l.id}" style="font-weight:700; color:var(--text);">${l.title}</a></td>
+              <td>$${Number(l.price).toLocaleString()}</td>
+              <td style="color:var(--muted);">${l.category || '—'}</td>
+              <td style="color:var(--muted);">${l.condition || '—'}</td>
+              <td><span class="badge badge-${l.status === 'active' ? 'shipped' : 'complete'}">${l.status}</span></td>
+              <td style="color:var(--muted);">${new Date(l.created_at).toLocaleDateString()}</td>
+              <td>
+                <button class="action-btn btn-remove" onclick="removeListing('${l.id}', this)">Remove</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  async function removeListing(id, btn) {
+    if (!confirm('Remove this listing? It will be hidden from buyers.')) return;
+    btn.textContent = 'Removing...';
+    const { error } = await supabase.from('listings').update({ status: 'removed' }).eq('id', id);
+    if (error) { btn.textContent = 'Error'; return; }
+    btn.textContent = 'Removed';
+    btn.disabled = true;
+    loadStats();
+  }
+
+  async function loadUsers() {
+    const container = document.getElementById('users-list');
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100);
+
+    if (error) { container.innerHTML = `<div class="empty-admin">Error: ${error.message}</div>`; return; }
+    if (!data || data.length === 0) { container.innerHTML = '<div class="empty-admin">No users yet.</div>'; return; }
+
+    container.innerHTML = `
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Full Name</th>
+            <th>Location</th>
+            <th>Payouts Connected</th>
+            <th>Admin</th>
+            <th>Joined</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.map(u => `
+            <tr>
+              <td style="font-weight:700;">${u.username || '—'}</td>
+              <td>${u.full_name || '—'}</td>
+              <td style="color:var(--muted);">${u.location || '—'}</td>
+              <td>${u.stripe_account_id ? '<span style="color:var(--success);font-weight:700;">✅ Yes</span>' : '<span style="color:var(--muted);">No</span>'}</td>
+              <td>${u.is_admin ? '<span style="color:var(--primary);font-weight:700;">Admin</span>' : '—'}</td>
+              <td style="color:var(--muted);">${u.created_at ? new Date(u.created_at).toLocaleDateString() : '—'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  init();
+</script>
+</body>
+</html>
