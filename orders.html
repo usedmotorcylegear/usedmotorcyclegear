@@ -181,9 +181,10 @@
     if (type === 'sale') {
       if (order.payout_status === 'ready' || order.status === 'complete') {
         payoutHtml = `<div class="payout-ready">✅ Payout of $${Number(order.seller_payout).toLocaleString()} is being processed</div>`;
-      } else if (order.delivered_at && order.payout_due_at) {
+      } else if (order.payout_due_at) {
         const dueDate = new Date(order.payout_due_at).toLocaleDateString();
-        payoutHtml = `<div class="payout-note">Payout of $${Number(order.seller_payout).toLocaleString()} due ${dueDate}</div>`;
+        const label = order.status === 'delivered' ? 'Buyer confirmed receipt —' : 'Auto-releases by';
+        payoutHtml = `<div class="payout-note">${label} payout of $${Number(order.seller_payout).toLocaleString()} on ${dueDate}</div>`;
       }
     }
 
@@ -206,35 +207,37 @@
         </div>`;
     }
 
-    // Dispute button/form — show for both buyer and seller on active orders
+    // Dispute button/form
     let disputeHtml = '';
-    if (['shipped', 'delivered'].includes(order.status)) {
+    if (order.status === 'disputed') {
+      disputeHtml = `<div class="dispute-note">⚠️ Dispute filed: ${order.dispute_reason || ''}</div>`;
+    } else if (type === 'purchase' && order.status === 'delivered') {
+      // Buyer already confirmed receipt — gray out dispute button
+      disputeHtml = `<button class="dispute-btn" disabled style="opacity:0.35;cursor:not-allowed;border-color:var(--muted);color:var(--muted);margin-top:0.5rem;">Flag a Problem</button>
+        <div style="font-size:0.75rem;color:var(--muted);margin-top:0.2rem;">You confirmed receipt. Contact support if there's an issue.</div>`;
+    } else if (['shipped', 'delivered'].includes(order.status)) {
       const role = type === 'purchase' ? 'buyer' : 'seller';
-      if (order.status === 'disputed') {
-        disputeHtml = `<div class="dispute-note">⚠️ Dispute filed: ${order.dispute_reason || ''}</div>`;
-      } else {
-        disputeHtml = `
-          <button class="dispute-btn" onclick="toggleDispute('${order.id}')">Flag a Problem</button>
-          <div class="dispute-form" id="dispute-form-${order.id}" style="display:none">
-            <select id="dispute-reason-${order.id}">
-              <option value="">Select a reason…</option>
-              ${role === 'buyer' ? `
-              <option value="Item not received">Item not received</option>
-              <option value="Item not as described">Item not as described</option>
-              <option value="Item arrived damaged">Item arrived damaged</option>
-              <option value="Wrong item sent">Wrong item sent</option>
-              ` : `
-              <option value="Buyer claims non-delivery">Buyer claims non-delivery</option>
-              <option value="Buyer requesting return">Buyer requesting return</option>
-              <option value="Fraudulent chargeback">Fraudulent chargeback</option>
-              `}
-              <option value="Other">Other</option>
-            </select>
-            <textarea id="dispute-details-${order.id}" placeholder="Describe the issue…"></textarea>
-            <button onclick="submitDispute('${order.id}', '${role}')">Submit Dispute</button>
-          </div>
-          <div id="dispute-alert-${order.id}" style="font-size:0.8rem;margin-top:0.25rem;"></div>`;
-      }
+      disputeHtml = `
+        <button class="dispute-btn" onclick="toggleDispute('${order.id}')">Flag a Problem</button>
+        <div class="dispute-form" id="dispute-form-${order.id}" style="display:none">
+          <select id="dispute-reason-${order.id}">
+            <option value="">Select a reason…</option>
+            ${role === 'buyer' ? `
+            <option value="Item not received">Item not received</option>
+            <option value="Item not as described">Item not as described</option>
+            <option value="Item arrived damaged">Item arrived damaged</option>
+            <option value="Wrong item sent">Wrong item sent</option>
+            ` : `
+            <option value="Buyer claims non-delivery">Buyer claims non-delivery</option>
+            <option value="Buyer requesting return">Buyer requesting return</option>
+            <option value="Fraudulent chargeback">Fraudulent chargeback</option>
+            `}
+            <option value="Other">Other</option>
+          </select>
+          <textarea id="dispute-details-${order.id}" placeholder="Describe the issue…"></textarea>
+          <button onclick="submitDispute('${order.id}', '${role}')">Submit Dispute</button>
+        </div>
+        <div id="dispute-alert-${order.id}" style="font-size:0.8rem;margin-top:0.25rem;"></div>`;
     }
 
     // Add tracking form for sellers who haven't shipped yet
@@ -288,10 +291,14 @@
 
     alertEl.innerHTML = 'Saving...';
 
+    const autoPayoutAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
     const { error } = await supabase.from('orders').update({
       tracking_number: trackingNumber,
       carrier,
       status: 'shipped',
+      payout_due_at: autoPayoutAt.toISOString(),
+      payout_status: 'pending',
     }).eq('id', orderId);
 
     if (error) {
@@ -303,6 +310,7 @@
   }
 
   async function confirmDelivery(orderId) {
+    if (!confirm('Confirm you received this order?\n\nThis will release the seller\'s payment in 3 days. Only confirm if the item has actually arrived.')) return;
     const alertEl = document.getElementById(`confirm-alert-${orderId}`);
     alertEl.innerHTML = 'Confirming...';
 
