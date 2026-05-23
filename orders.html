@@ -68,6 +68,8 @@
     .dispute-form textarea { min-height: 60px; resize: vertical; }
     .dispute-form button { font-size: 0.82rem; padding: 0.4rem 0.9rem; background: var(--danger); color: #fff; border: none; border-radius: 4px; cursor: pointer; }
     .dispute-note { font-size: 0.8rem; color: var(--danger); margin-top: 0.3rem; font-weight: 600; }
+    .confirm-received-btn { font-size: 0.82rem; margin-top: 0.6rem; padding: 0.4rem 0.9rem; background: var(--success); color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; }
+    .confirm-received-btn:hover { opacity: 0.85; }
   </style>
 </head>
 <body>
@@ -194,6 +196,16 @@
       }
     }
 
+    // Confirm received button — buyers only, when status is shipped
+    let confirmHtml = '';
+    if (type === 'purchase' && order.status === 'shipped') {
+      confirmHtml = `
+        <div style="margin-top:0.6rem;">
+          <button class="confirm-received-btn" onclick="confirmDelivery('${order.id}')">✅ I received this order</button>
+          <div id="confirm-alert-${order.id}" style="font-size:0.8rem;margin-top:0.25rem;"></div>
+        </div>`;
+    }
+
     // Dispute button/form — show for both buyer and seller on active orders
     let disputeHtml = '';
     if (['shipped', 'delivered'].includes(order.status)) {
@@ -259,6 +271,7 @@
           ${trackingHtml}
           ${payoutHtml}
           ${deliveryHtml}
+          ${confirmHtml}
           ${addTrackingHtml}
           ${disputeHtml}
         </div>
@@ -275,14 +288,37 @@
 
     alertEl.innerHTML = 'Saving...';
 
-    const { error } = await supabase.functions.invoke('add-tracking', {
-      body: { orderId, trackingNumber, carrier }
-    });
+    const { error } = await supabase.from('orders').update({
+      tracking_number: trackingNumber,
+      carrier,
+      status: 'shipped',
+    }).eq('id', orderId);
 
     if (error) {
       alertEl.innerHTML = `<span style="color:var(--danger)">${error.message}</span>`;
     } else {
       alertEl.innerHTML = '<span style="color:var(--success)">Shipped! Tracking saved.</span>';
+      setTimeout(() => load(), 1500);
+    }
+  }
+
+  async function confirmDelivery(orderId) {
+    const alertEl = document.getElementById(`confirm-alert-${orderId}`);
+    alertEl.innerHTML = 'Confirming...';
+
+    const deliveredAt = new Date();
+    const payoutDueAt = new Date(deliveredAt.getTime() + 3 * 24 * 60 * 60 * 1000);
+
+    const { error } = await supabase.from('orders').update({
+      status: 'delivered',
+      delivered_at: deliveredAt.toISOString(),
+      payout_due_at: payoutDueAt.toISOString(),
+    }).eq('id', orderId);
+
+    if (error) {
+      alertEl.innerHTML = `<span style="color:var(--danger)">${error.message}</span>`;
+    } else {
+      alertEl.innerHTML = '<span style="color:var(--success)">Got it! Funds release to seller in 3 days.</span>';
       setTimeout(() => load(), 1500);
     }
   }
