@@ -38,6 +38,7 @@
       <ul class="sidebar-links">
         <li><a href="#listings" class="active">My Listings</a></li>
         <li><a href="#profile">Edit Profile</a></li>
+        <li><a href="#payouts">Payouts</a></li>
         <li><a href="influencer.html">Influencer Program</a></li>
         <li><a href="#" id="signout-btn">Sign Out</a></li>
       </ul>
@@ -82,6 +83,12 @@
       <section id="sales" style="margin-top:3rem;">
         <div class="account-section-title">Sales — Ship & Track</div>
         <div id="sales-list"><div class="loading">Loading...</div></div>
+      </section>
+
+      <!-- PAYOUTS -->
+      <section id="payouts" style="margin-top:3rem;">
+        <div class="account-section-title">Payouts</div>
+        <div id="payout-setup"><div class="loading">Loading...</div></div>
       </section>
 
       <!-- EDIT PROFILE -->
@@ -151,6 +158,7 @@
     loadSales();
     loadOffersReceived();
     loadMyOffers();
+    loadPayoutStatus(profile);
   }
 
   function setAvatar(url, name) {
@@ -456,6 +464,37 @@
       disputed: 'Disputed'
     };
     return map[status] || status;
+  }
+
+  function loadPayoutStatus(profile) {
+    const container = document.getElementById('payout-setup');
+    const returningFromStripe = new URLSearchParams(window.location.search).get('payout') === 'connected';
+
+    if (returningFromStripe || profile?.stripe_account_id) {
+      container.innerHTML = `
+        <div style="color:var(--success); font-weight:700; font-size:0.95rem;">✅ Payouts connected</div>
+        <p style="color:var(--muted); font-size:0.875rem; margin-top:0.4rem;">Your earnings are deposited to your bank automatically when orders complete.</p>`;
+    } else {
+      container.innerHTML = `
+        <p style="color:var(--muted); font-size:0.9rem; margin-bottom:1rem;">Connect your bank account so you get paid automatically when your items sell.</p>
+        <button class="btn btn-primary" onclick="setupPayouts()">Set Up Payouts</button>
+        <div id="payout-alert" style="margin-top:0.75rem; font-size:0.875rem;"></div>`;
+    }
+  }
+
+  async function setupPayouts() {
+    const alertEl = document.getElementById('payout-alert');
+    alertEl.innerHTML = 'Connecting to Stripe...';
+
+    const { data, error } = await supabase.functions.invoke('create-connect-account', {
+      body: { userId: currentUser.id },
+    });
+
+    if (error || !data?.url) {
+      alertEl.innerHTML = `<span style="color:var(--danger);">Error: ${error?.message || 'Could not start setup. Try again.'}</span>`;
+    } else {
+      window.location.href = data.url;
+    }
   }
 
   document.getElementById('signout-btn').addEventListener('click', async (e) => {
