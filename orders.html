@@ -114,6 +114,17 @@
     const hasPurchases = purchases && purchases.length > 0;
     const hasSales = sales && sales.length > 0;
 
+    // Pre-fetch this user's existing ratings for all complete orders
+    const allOrders = [...(purchases || []), ...(sales || [])];
+    const completedIds = allOrders.filter(o => o.status === 'complete').map(o => o.id);
+    let myRatings = {};
+    if (completedIds.length > 0) {
+      const { data: ratingRows } = await supabase
+        .from('ratings').select('order_id, rating, comment')
+        .eq('reviewer_id', user.id).in('order_id', completedIds);
+      if (ratingRows) ratingRows.forEach(r => { myRatings[r.order_id] = r; });
+    }
+
     if (!hasPurchases && !hasSales) {
       container.innerHTML = `<div class="empty-orders"><p>No orders yet.</p><a href="browse.html" class="btn btn-primary" style="margin-top:1rem; display:inline-block;">Browse Gear</a></div>`;
       return;
@@ -124,21 +135,21 @@
     if (hasPurchases) {
       html += `<section style="margin-bottom:3rem;">
         <div class="orders-section-title">My Orders</div>
-        ${purchases.map(order => orderRow(order, 'purchase')).join('')}
+        ${purchases.map(order => orderRow(order, 'purchase', myRatings)).join('')}
       </section>`;
     }
 
     if (hasSales) {
       html += `<section>
         <div class="orders-section-title">My Sales</div>
-        ${sales.map(order => orderRow(order, 'sale')).join('')}
+        ${sales.map(order => orderRow(order, 'sale', myRatings)).join('')}
       </section>`;
     }
 
     container.innerHTML = html;
   }
 
-  function orderRow(order, type) {
+  function orderRow(order, type, myRatings = {}) {
     const img = order.listings?.images?.[0];
     const title = order.listings?.title || 'Item';
     const amount = type === 'sale'
@@ -240,6 +251,30 @@
         <div id="dispute-alert-${order.id}" style="font-size:0.8rem;margin-top:0.25rem;"></div>`;
     }
 
+    // Rating form for completed orders
+    let ratingHtml = '';
+    if (order.status === 'complete') {
+      const existing = myRatings[order.id];
+      if (existing) {
+        const stars = [1,2,3,4,5].map(n => `<span style="color:${n <= existing.rating ? '#f59e0b' : '#d1d5db'};">&#9733;</span>`).join('');
+        ratingHtml = `<div style="margin-top:0.5rem; font-size:0.82rem;">${stars}${existing.comment ? ` &mdash; <em style="color:var(--muted);">${existing.comment}</em>` : ''}</div>`;
+      } else {
+        const reviewedId = type === 'purchase' ? order.seller_id : order.buyer_id;
+        const reviewedLabel = type === 'purchase' ? 'seller' : 'buyer';
+        ratingHtml = `
+          <div style="margin-top:0.6rem;" id="rating-section-${order.id}">
+            <div style="font-size:0.82rem; color:var(--muted); margin-bottom:0.3rem;">Rate this ${reviewedLabel}:</div>
+            <div style="display:flex; gap:0.1rem; font-size:1.6rem; line-height:1; margin-bottom:0.35rem;">
+              ${[1,2,3,4,5].map(n => `<span id="star-${order.id}-${n}" style="cursor:pointer; color:#d1d5db;" onmouseover="hoverRating('${order.id}',${n})" onmouseout="unhoverRating('${order.id}')" onclick="setRating('${order.id}',${n})">&#9733;</span>`).join('')}
+            </div>
+            <input type="hidden" id="rating-val-${order.id}" value="0" />
+            <textarea id="rating-comment-${order.id}" placeholder="Add a comment (optional)" style="display:none; width:100%; font-size:0.82rem; padding:0.4rem 0.6rem; border:1px solid var(--border); border-radius:4px; background:var(--bg); color:var(--text); min-height:52px; resize:vertical; margin-bottom:0.35rem; box-sizing:border-box;"></textarea>
+            <button id="rating-submit-${order.id}" style="display:none; font-size:0.82rem; padding:0.35rem 0.85rem; background:var(--text); color:#fff; border:none; border-radius:4px; cursor:pointer; font-weight:700;" onclick="submitRating('${order.id}','${reviewedId}')">Submit Rating</button>
+            <div id="rating-alert-${order.id}" style="font-size:0.8rem; margin-top:0.25rem;"></div>
+          </div>`;
+      }
+    }
+
     // Add tracking form for sellers who haven't shipped yet
     const addTrackingHtml = (type === 'sale' && order.status === 'paid') ? `
       <div class="add-tracking-form">
@@ -277,6 +312,7 @@
           ${confirmHtml}
           ${addTrackingHtml}
           ${disputeHtml}
+          ${ratingHtml}
         </div>
         <span class="order-status ${statusClass}">${statusLabel}</span>
       </div>`;
@@ -362,6 +398,59 @@
       alertEl.innerHTML = '<span style="color:var(--danger)">Dispute submitted. Our team will review within 1 business day.</span>';
       supabase.functions.invoke('send-email', { body: { type: 'dispute_filed', orderId } });
       setTimeout(() => load(), 2000);
+    }
+  }
+
+  function hoverRating(orderId, value) {
+    if (parseInt(document.getElementById(`rating-val-${orderId}`).value) > 0) return;
+    for (let i = 1; i <= 5; i++) {
+      const s = document.getElementById(`star-${orderId}-${i}`);
+      if (s) s.style.color = i <= value ? '#f59e0b' : '#d1d5db';
+    }
+  }
+
+  function unhoverRating(orderId) {
+    const current = parseInt(document.getElementById(`rating-val-${orderId}`).value) || 0;
+    for (let i = 1; i <= 5; i++) {
+      const s = document.getElementById(`star-${orderId}-${i}`);
+      if (s) s.style.color = i <= current ? '#f59e0b' : '#d1d5db';
+    }
+  }
+
+  function setRating(orderId, value) {
+    document.getElementById(`rating-val-${orderId}`).value = value;
+    for (let i = 1; i <= 5; i++) {
+      const s = document.getElementById(`star-${orderId}-${i}`);
+      if (s) s.style.color = i <= value ? '#f59e0b' : '#d1d5db';
+    }
+    const comment = document.getElementById(`rating-comment-${orderId}`);
+    const btn = document.getElementById(`rating-submit-${orderId}`);
+    if (comment) comment.style.display = 'block';
+    if (btn) btn.style.display = 'inline-block';
+  }
+
+  async function submitRating(orderId, reviewedId) {
+    const rating = parseInt(document.getElementById(`rating-val-${orderId}`).value);
+    const comment = (document.getElementById(`rating-comment-${orderId}`)?.value || '').trim();
+    const alertEl = document.getElementById(`rating-alert-${orderId}`);
+    const btn = document.getElementById(`rating-submit-${orderId}`);
+    if (!rating) { alertEl.innerHTML = '<span style="color:var(--danger)">Select a star rating first.</span>'; return; }
+    btn.disabled = true; btn.textContent = 'Submitting...';
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await supabase.from('ratings').insert({
+      order_id: orderId,
+      reviewer_id: user.id,
+      reviewed_id: reviewedId,
+      rating,
+      comment: comment || null
+    });
+    if (error) {
+      alertEl.innerHTML = `<span style="color:var(--danger)">${error.message}</span>`;
+      btn.disabled = false; btn.textContent = 'Submit Rating';
+    } else {
+      const stars = [1,2,3,4,5].map(n => `<span style="color:${n <= rating ? '#f59e0b' : '#d1d5db'};">&#9733;</span>`).join('');
+      document.getElementById(`rating-section-${orderId}`).innerHTML =
+        `<div style="font-size:0.82rem; margin-top:0.5rem;">${stars}${comment ? ` &mdash; <em style="color:var(--muted);">${comment}</em>` : ''}</div>`;
     }
   }
 
