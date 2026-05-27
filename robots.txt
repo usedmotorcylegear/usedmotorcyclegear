@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /account.html
+Disallow: /orders.html
+Disallow: /checkout.html
+Disallow: /inbox.html
+Disallow: /messages.html
+Disallow: /success.html
+
+Sitemap: https://usedmotorcyclegear.com/sitemap.xml

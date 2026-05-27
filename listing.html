@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Listing — Used Motorcycle Gear</title>
+  <meta name="description" content="Used motorcycle gear for sale on UsedMotorcycleGear.com — certified never crashed." />
+  <meta property="og:type" content="product" />
+  <meta property="og:image" content="https://usedmotorcyclegear.com/og-image.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
@@ -77,6 +81,52 @@
       .single();
 
     document.title = `${listing.title} — Used Motorcycle Gear`;
+
+    // Dynamic SEO meta tags
+    const listingUrl = `https://usedmotorcyclegear.com/listing.html?id=${listing.id}`;
+    const listingImg = listing.images?.[0] || 'https://usedmotorcyclegear.com/og-image.jpg';
+    const listingDesc = `${listing.condition} ${listing.category} — $${Number(listing.price).toLocaleString()}. ${(listing.description || '').slice(0, 120)}`;
+
+    document.querySelector('meta[name="description"]')?.setAttribute('content', listingDesc);
+    document.querySelector('meta[property="og:type"]')?.setAttribute('content', 'product');
+
+    const setOg = (prop, val) => {
+      let el = document.querySelector(`meta[property="${prop}"]`);
+      if (!el) { el = document.createElement('meta'); el.setAttribute('property', prop); document.head.appendChild(el); }
+      el.setAttribute('content', val);
+    };
+    setOg('og:title', `${listing.title} — $${Number(listing.price).toLocaleString()}`);
+    setOg('og:description', listingDesc);
+    setOg('og:url', listingUrl);
+    setOg('og:image', listingImg);
+    setOg('og:price:amount', String(listing.price));
+    setOg('og:price:currency', 'USD');
+
+    // Canonical URL
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) { canonical = document.createElement('link'); canonical.setAttribute('rel', 'canonical'); document.head.appendChild(canonical); }
+    canonical.setAttribute('href', listingUrl);
+
+    // JSON-LD structured data for Google
+    const jsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: listing.title,
+      description: listing.description || '',
+      image: listing.images || [],
+      offers: {
+        '@type': 'Offer',
+        price: listing.price,
+        priceCurrency: 'USD',
+        availability: listing.status === 'active' ? 'https://schema.org/InStock' : 'https://schema.org/SoldOut',
+        url: listingUrl,
+        itemCondition: listing.condition === 'New' ? 'https://schema.org/NewCondition' : 'https://schema.org/UsedCondition',
+      },
+    };
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.textContent = JSON.stringify(jsonLd);
+    document.head.appendChild(script);
 
     const images = listing.images && listing.images.length > 0 ? listing.images : [];
     const mainImg = images[0] || null;
