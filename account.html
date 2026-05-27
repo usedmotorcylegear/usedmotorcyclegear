@@ -37,6 +37,7 @@
       <div class="account-email" id="sidebar-email"></div>
       <ul class="sidebar-links">
         <li><a href="#listings" class="active">My Listings</a></li>
+        <li><a href="#offers-received">Offers</a></li>
         <li><a href="#profile">Edit Profile</a></li>
         <li><a href="#payouts">Payouts</a></li>
         <li><a href="influencer.html">Influencer Program</a></li>
@@ -328,17 +329,28 @@
     }
 
     container.innerHTML = data.map(offer => `
-      <div class="my-listing-row" style="flex-wrap:wrap; gap:0.75rem;">
+      <div class="my-listing-row" style="flex-wrap:wrap; gap:0.75rem; align-items:flex-start;">
         <div class="my-listing-info">
-          <div class="my-listing-title">${offer.listings?.title || 'Listing'}</div>
+          <div class="my-listing-title"><a href="listing.html?id=${offer.listings?.id}" style="color:inherit;">${offer.listings?.title || 'Listing'}</a></div>
           <div class="my-listing-price">Offer: $${Number(offer.amount).toLocaleString()}</div>
           <div style="font-size:0.8rem; color:var(--muted); margin-top:0.2rem;">${new Date(offer.created_at).toLocaleDateString()}</div>
         </div>
         ${offer.status === 'pending' ? `
-          <div style="display:flex; gap:0.5rem; flex-shrink:0;">
+          <div style="display:flex; gap:0.5rem; flex-shrink:0; flex-wrap:wrap;">
             <button class="btn btn-dark" style="padding:0.4rem 0.9rem; font-size:0.85rem;" onclick="respondToOffer('${offer.id}', '${offer.buyer_id}', '${offer.listing_id}', ${offer.amount}, 'accepted')">Accept</button>
             <button class="btn btn-danger" style="padding:0.4rem 0.9rem; font-size:0.85rem;" onclick="respondToOffer('${offer.id}', '${offer.buyer_id}', '${offer.listing_id}', ${offer.amount}, 'declined')">Decline</button>
-          </div>` : `<span style="font-size:0.85rem; font-weight:600; color:${offer.status === 'accepted' ? 'var(--success)' : 'var(--danger)'};">${offer.status.charAt(0).toUpperCase() + offer.status.slice(1)}</span>`}
+            <button class="btn btn-outline" style="padding:0.4rem 0.9rem; font-size:0.85rem;" onclick="toggleCounterForm('${offer.id}')">Counter</button>
+          </div>
+          <div id="counter-form-${offer.id}" style="display:none; width:100%; margin-top:0.25rem;">
+            <div style="display:flex; gap:0.5rem; align-items:center;">
+              <span style="font-weight:700;">$</span>
+              <input type="number" id="counter-input-${offer.id}" placeholder="Counter amount" min="1" step="0.01" style="flex:1; max-width:160px;" />
+              <button class="btn btn-dark" style="padding:0.4rem 0.9rem; font-size:0.85rem;" onclick="submitCounter('${offer.id}', '${offer.buyer_id}', '${offer.listing_id}')">Send</button>
+            </div>
+          </div>` :
+        offer.status === 'countered' ? `
+          <span style="font-size:0.85rem; font-weight:600; color:var(--muted);">Countered at $${Number(offer.counter_amount).toLocaleString()} &mdash; awaiting buyer response</span>` :
+        `<span style="font-size:0.85rem; font-weight:600; color:${offer.status === 'accepted' ? 'var(--success)' : 'var(--danger)'};">${offer.status === 'accepted' ? '&#10003; Accepted' : '&#10007; Declined'}</span>`}
       </div>
     `).join('');
   }
@@ -357,6 +369,35 @@
     loadOffersReceived();
   }
 
+  function toggleCounterForm(offerId) {
+    const form = document.getElementById(`counter-form-${offerId}`);
+    form.style.display = form.style.display === 'none' ? 'flex' : 'none';
+  }
+
+  async function submitCounter(offerId, buyerId, listingId) {
+    const input = document.getElementById(`counter-input-${offerId}`);
+    const amount = parseFloat(input.value);
+    if (!amount || amount <= 0) { alert('Please enter a valid counter amount.'); return; }
+    const { error } = await supabase.from('offers').update({
+      status: 'countered',
+      counter_amount: amount
+    }).eq('id', offerId);
+    if (error) { alert('Error sending counter offer.'); return; }
+    await supabase.from('messages').insert({
+      listing_id: listingId,
+      sender_id: currentUser.id,
+      recipient_id: buyerId,
+      body: `The seller countered your offer with $${Number(amount).toLocaleString()}. Visit the listing to accept or decline: ${window.location.origin}/listing.html?id=${listingId}`
+    });
+    loadOffersReceived();
+  }
+
+  async function declineOffer(offerId) {
+    const { error } = await supabase.from('offers').update({ status: 'declined' }).eq('id', offerId);
+    if (!error) loadMyOffers();
+    else alert('Error declining offer.');
+  }
+
   async function loadMyOffers() {
     const container = document.getElementById('my-offers-list');
     const { data, error } = await supabase
@@ -371,16 +412,27 @@
     }
 
     container.innerHTML = data.map(offer => `
-      <div class="my-listing-row">
+      <div class="my-listing-row" style="flex-wrap:wrap; gap:0.75rem; align-items:flex-start;">
         <div class="my-listing-info">
-          <div class="my-listing-title">${offer.listings?.title || 'Listing'}</div>
+          <div class="my-listing-title"><a href="listing.html?id=${offer.listings?.id}" style="color:inherit;">${offer.listings?.title || 'Listing'}</a></div>
           <div class="my-listing-price">Your offer: $${Number(offer.amount).toLocaleString()}</div>
           <div style="font-size:0.8rem; color:var(--muted); margin-top:0.2rem;">${new Date(offer.created_at).toLocaleDateString()}</div>
         </div>
-        <span style="font-size:0.85rem; font-weight:700; flex-shrink:0; color:${offer.status === 'accepted' ? 'var(--success)' : offer.status === 'declined' ? 'var(--danger)' : 'var(--muted)'};">
-          ${offer.status === 'accepted' ? '✓ Accepted' : offer.status === 'declined' ? '✗ Declined' : 'Pending'}
-        </span>
-        ${offer.status === 'accepted' ? `<a href="checkout.html?id=${offer.listing_id}&offer=${offer.amount}" class="btn btn-primary" style="padding:0.4rem 0.9rem; font-size:0.85rem;">Complete Purchase</a>` : ''}
+        ${offer.status === 'countered' ? `
+          <div style="flex-shrink:0;">
+            <div style="font-size:0.85rem; margin-bottom:0.4rem; font-weight:600;">Counter: $${Number(offer.counter_amount).toLocaleString()}</div>
+            <div style="display:flex; gap:0.5rem;">
+              <a href="checkout.html?id=${offer.listing_id}&offer=${offer.counter_amount}" class="btn btn-dark" style="padding:0.4rem 0.8rem; font-size:0.82rem;">Accept</a>
+              <button class="btn btn-danger" style="padding:0.4rem 0.8rem; font-size:0.82rem;" onclick="declineOffer('${offer.id}')">Decline</button>
+            </div>
+          </div>` :
+        offer.status === 'accepted' ? `
+          <div style="flex-shrink:0;">
+            <a href="checkout.html?id=${offer.listing_id}&offer=${offer.amount}" class="btn btn-primary" style="padding:0.4rem 0.9rem; font-size:0.85rem;">Complete Purchase</a>
+          </div>` :
+        `<span style="font-size:0.85rem; font-weight:700; flex-shrink:0; color:${offer.status === 'declined' ? 'var(--danger)' : 'var(--muted)'};">
+          ${offer.status === 'declined' ? '&#10007; Declined' : '&#8987; Pending'}
+        </span>`}
       </div>
     `).join('');
   }

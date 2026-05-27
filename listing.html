@@ -227,6 +227,37 @@
 
       document.getElementById('offer-submit-btn').addEventListener('click', () => submitOffer(listing.user_id, listing.id));
       document.getElementById('send-btn').addEventListener('click', () => sendMessage(listing.user_id));
+
+      // Check if buyer already has an active offer on this listing
+      const { data: offerRows } = await supabase
+        .from('offers')
+        .select('*')
+        .eq('listing_id', listing.id)
+        .eq('buyer_id', currentUser.id)
+        .in('status', ['pending', 'accepted', 'countered'])
+        .order('created_at', { ascending: false });
+
+      const existingOffer = offerRows && offerRows.length > 0 ? offerRows[0] : null;
+      if (existingOffer) {
+        const offerToggle = document.getElementById('offer-toggle-btn');
+        const offerFormEl = document.getElementById('offer-form');
+        offerToggle.style.display = 'none';
+        offerFormEl.style.display = 'block';
+        if (existingOffer.status === 'pending') {
+          offerFormEl.innerHTML = `<div style="padding:0.75rem 1rem; border:1px solid var(--border); font-size:0.875rem; color:var(--muted); line-height:1.5;">Your offer of <strong>$${Number(existingOffer.amount).toLocaleString()}</strong> is pending. The seller will respond soon.</div>`;
+        } else if (existingOffer.status === 'accepted') {
+          offerFormEl.innerHTML = `<a href="checkout.html?id=${listing.id}&offer=${existingOffer.amount}" class="btn btn-primary btn-full" style="display:block; text-align:center;">&#10003; Offer accepted &mdash; Complete Purchase ($${Number(existingOffer.amount).toLocaleString()})</a>`;
+        } else if (existingOffer.status === 'countered') {
+          offerFormEl.innerHTML = `
+            <div style="padding:0.85rem; border:1px solid var(--border); background:var(--bg);">
+              <p style="font-size:0.875rem; margin-bottom:0.75rem;">The seller countered at <strong>$${Number(existingOffer.counter_amount).toLocaleString()}</strong>.</p>
+              <div style="display:flex; gap:0.5rem;">
+                <a href="checkout.html?id=${listing.id}&offer=${existingOffer.counter_amount}" class="btn btn-dark" style="flex:1; text-align:center; padding:0.5rem;">Accept $${Number(existingOffer.counter_amount).toLocaleString()}</a>
+                <button class="btn btn-danger" style="padding:0.5rem 1rem;" onclick="declineOffer('${existingOffer.id}')">Decline</button>
+              </div>
+            </div>`;
+        }
+      }
     } else {
       contactEl.innerHTML = `<a href="auth.html?next=listing.html%3Fid%3D${id}" class="btn btn-dark btn-full">Sign in to Buy or Message</a>`;
     }
@@ -262,6 +293,11 @@
     } else {
       document.getElementById('offer-form').innerHTML = '<div class="alert alert-success">Offer submitted! The seller will be in touch.</div>';
     }
+  }
+
+  async function declineOffer(offerId) {
+    await supabase.from('offers').update({ status: 'declined' }).eq('id', offerId);
+    location.reload();
   }
 
   async function sendMessage(recipientId) {
