@@ -93,6 +93,10 @@
 <script src="js/config.js"></script>
 <script src="js/auth.js"></script>
 <script>
+  function escapeHtml(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
   async function load() {
     const user = await requireAuth();
     const container = document.getElementById('inbox-content');
@@ -150,8 +154,8 @@
           <div class="conv-avatar">${avatar}</div>
           <div class="conv-info">
             <div class="conv-name">${name}</div>
-            <div class="conv-listing">Re: ${msg.listings?.title || 'Listing'}</div>
-            <div class="conv-preview">${msg.body}</div>
+            <div class="conv-listing">Re: ${escapeHtml(msg.listings?.title || 'Listing')}</div>
+            <div class="conv-preview">${escapeHtml(msg.body)}</div>
           </div>
           <div class="conv-right">
             <div class="conv-date">${date}</div>

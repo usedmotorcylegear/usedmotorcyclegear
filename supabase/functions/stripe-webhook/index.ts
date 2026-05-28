@@ -38,6 +38,13 @@ Deno.serve(async (req) => {
       country: shipping.address?.country,
     } : null;
 
+    // Idempotency: skip if order already exists for this session
+    const { data: existingOrder } = await supabase.from('orders').select('id').eq('stripe_session_id', session.id).maybeSingle();
+    if (existingOrder) {
+      console.log(`Order already exists for session ${session.id}, skipping`);
+      return new Response(JSON.stringify({ received: true }), { headers: { 'Content-Type': 'application/json' } });
+    }
+
     const { error } = await supabase.from('orders').insert({
       listing_id,
       seller_id,

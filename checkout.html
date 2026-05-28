@@ -116,7 +116,7 @@
     try {
       const { data: { user: buyerUser } } = await supabase.auth.getUser();
       const { data, error } = await supabase.functions.invoke('create-checkout-session', {
-        body: { listingId, sellerId, buyerId: buyerUser.id, amount, referralCode, referralPayout, listingTitle }
+        body: { listingId, buyerId: buyerUser.id, referralCode, offerAmount: offerPrice ? Number(offerPrice) : null }
       });
 
       if (error || !data?.url) throw new Error(error?.message || 'Failed to create checkout session');

@@ -274,7 +274,7 @@
 
   async function showDashboard(code, section) {
     const [{ data: orderRows }, { data: listingRows }] = await Promise.all([
-      supabase.from('orders').select('price, status').eq('referral_code', code),
+      supabase.from('orders').select('amount, status').eq('referral_code', code),
       supabase.from('listings').select('id, price, status').eq('referral_code', code),
     ]);
 
@@ -284,10 +284,10 @@
     const timesUsed = orders.length + listings.length;
     const pendingEarnings = orders
       .filter(o => o.status !== 'complete')
-      .reduce((sum, o) => sum + (Number(o.price) * 0.05), 0);
+      .reduce((sum, o) => sum + (Number(o.amount) * 0.05), 0);
     const totalEarned = orders
       .filter(o => o.status === 'complete')
-      .reduce((sum, o) => sum + (Number(o.price) * 0.05), 0);
+      .reduce((sum, o) => sum + (Number(o.amount) * 0.05), 0);
 
     const shareUrl = `${window.location.origin}/browse.html?ref=${code}`;
 

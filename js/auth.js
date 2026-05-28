@@ -61,7 +61,7 @@ async function updateNavForUser() {
 async function requireAuth() {
   const user = await getUser();
   if (!user) {
-    window.location.href = 'auth.html?next=' + encodeURIComponent(window.location.pathname);
+    window.location.href = 'auth.html?next=' + encodeURIComponent(window.location.pathname + window.location.search);
   }
   return user;
 }
