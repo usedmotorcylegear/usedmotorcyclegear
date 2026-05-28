@@ -44,6 +44,12 @@ Deno.serve(async (_req) => {
           transfer_group: order.id,
         });
         console.log(`Transferred $${order.seller_payout} to seller ${order.seller_id}`);
+        // Only email seller on successful transfer
+        await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-email`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}` },
+          body: JSON.stringify({ type: 'payout_released', orderId: order.id }),
+        });
       } catch (err) {
         console.error(`Transfer failed for order ${order.id}: ${err.message}`);
         await supabase.from('orders').update({ payout_status: 'transfer_failed' }).eq('id', order.id);
@@ -52,13 +58,6 @@ Deno.serve(async (_req) => {
       // Seller hasn't set up payouts yet — funds held until they do
       console.log(`Seller ${order.seller_id} has no Connect account — payout held as 'ready'`);
     }
-
-    // Send payout email to seller
-    await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-email`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}` },
-      body: JSON.stringify({ type: 'payout_released', orderId: order.id }),
-    });
 
     processed++;
   }

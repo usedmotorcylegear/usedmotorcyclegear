@@ -507,13 +507,20 @@
   async function submitTracking(orderId) {
     const tracking = document.getElementById(`tracking-${orderId}`).value.trim();
     if (!tracking) return alert('Please enter a tracking number.');
+    const autoPayoutAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     const { error } = await supabase.from('orders').update({
       tracking_number: tracking,
       status: 'shipped',
-      shipped_at: new Date().toISOString()
+      shipped_at: new Date().toISOString(),
+      payout_due_at: autoPayoutAt.toISOString(),
+      payout_status: 'pending',
     }).eq('id', orderId);
-    if (!error) loadSales();
-    else alert('Error saving tracking number.');
+    if (!error) {
+      supabase.functions.invoke('send-email', { body: { type: 'item_shipped', orderId } });
+      loadSales();
+    } else {
+      alert('Error saving tracking number.');
+    }
   }
 
   function formatStatus(status) {

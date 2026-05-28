@@ -118,6 +118,15 @@
   const withUserId = params.get('with');
   let currentUser = null;
 
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   async function load() {
     currentUser = await requireAuth();
     const content = document.getElementById('content');
@@ -149,7 +158,7 @@
         ${(messages || []).map(m => {
           const sent = m.sender_id === currentUser.id;
           return `<div class="message-bubble ${sent ? 'sent' : 'received'}">
-              ${m.body}
+              ${escapeHtml(m.body)}
               <div class="msg-meta">${new Date(m.created_at).toLocaleString()}</div>
             </div>`;
         }).join('')}
@@ -198,7 +207,7 @@
       const thread = document.getElementById('thread');
       const bubble = document.createElement('div');
       bubble.className = 'message-bubble sent';
-      bubble.innerHTML = `${body}<div class="msg-meta">Just now</div>`;
+      bubble.innerHTML = `${escapeHtml(body)}<div class="msg-meta">Just now</div>`;
       thread.appendChild(bubble);
       thread.scrollTop = thread.scrollHeight;
     }
