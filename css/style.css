@@ -484,10 +484,12 @@ select.filter-select:focus { outline: none; border-color: var(--text); }
 }
 
 .listing-images img {
-  width: 100%;
-  height: auto;
   display: block;
-  margin-bottom: 0.75rem;
+  max-width: 100%;
+  max-height: 75vh;
+  width: auto;
+  height: auto;
+  margin: 0 auto 0.75rem;
 }
 
 .thumb-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
