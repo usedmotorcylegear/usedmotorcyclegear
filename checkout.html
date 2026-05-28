@@ -66,7 +66,7 @@
 
     const { data: { user } } = await supabase.auth.getUser();
     const { data: listing } = await supabase.from('listings').select('*').eq('id', listingId).single();
-    if (!listing) { content.innerHTML = '<p>Listing not found or no longer available.</p>'; return; }
+    if (!listing || listing.is_dummy) { content.innerHTML = '<p>This item is no longer available. <a href="browse.html">Browse other listings →</a></p>'; return; }
     if (listing.user_id === user.id) { content.innerHTML = '<p>You cannot purchase your own listing.</p>'; return; }
 
     document.getElementById('back-link').href = `listing.html?id=${listingId}`;

@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (!listing) throw new Error('Listing not found');
-    if (listing.is_dummy) throw new Error('This is a sample listing and cannot be purchased');
+    if (listing.is_dummy) throw new Error('This item is no longer available');
     if (listing.status !== 'active') throw new Error('This item is no longer available');
     if (listing.user_id === buyerId) throw new Error('You cannot purchase your own listing');
 
