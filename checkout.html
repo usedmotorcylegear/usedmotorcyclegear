@@ -97,18 +97,17 @@
 
       <div id="pay-alert"></div>
 
-      <button id="pay-btn" class="btn btn-dark btn-full stripe-btn" onclick="handlePay('${listing.id}', '${listing.user_id}', ${price}, '${listing.title.replace(/'/g, "\\'")}')">
+      <button id="pay-btn" class="btn btn-dark btn-full stripe-btn" onclick="handlePay('${listing.id}', ${price})">
         Pay $${price.toLocaleString()} with Stripe
       </button>
       <p class="secure-note">🔒 Secure payment via Stripe. Funds held for 3 days after delivery before seller is paid.</p>
     `;
   }
 
-  async function handlePay(listingId, sellerId, amount, listingTitle) {
+  async function handlePay(listingId, amount) {
     const btn = document.getElementById('pay-btn');
     const alertEl = document.getElementById('pay-alert');
     const referralCode = (document.getElementById('referral-code')?.value || '').trim().toLowerCase() || null;
-    const referralPayout = referralCode ? +(amount * 0.05).toFixed(2) : 0;
 
     btn.disabled = true;
     btn.textContent = 'Redirecting to Stripe...';

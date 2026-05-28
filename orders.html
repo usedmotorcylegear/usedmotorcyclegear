@@ -265,7 +265,7 @@
       const existing = myRatings[order.id];
       if (existing) {
         const stars = [1,2,3,4,5].map(n => `<span style="color:${n <= existing.rating ? '#f59e0b' : '#d1d5db'};">&#9733;</span>`).join('');
-        ratingHtml = `<div style="margin-top:0.5rem; font-size:0.82rem;">${stars}${existing.comment ? ` &mdash; <em style="color:var(--muted);">${existing.comment}</em>` : ''}</div>`;
+        ratingHtml = `<div style="margin-top:0.5rem; font-size:0.82rem;">${stars}${existing.comment ? ` &mdash; <em style="color:var(--muted);">${escapeHtml(existing.comment)}</em>` : ''}</div>`;
       } else {
         const reviewedId = type === 'purchase' ? order.seller_id : order.buyer_id;
         const reviewedLabel = type === 'purchase' ? 'seller' : 'buyer';
@@ -469,7 +469,7 @@
     } else {
       const stars = [1,2,3,4,5].map(n => `<span style="color:${n <= rating ? '#f59e0b' : '#d1d5db'};">&#9733;</span>`).join('');
       document.getElementById(`rating-section-${orderId}`).innerHTML =
-        `<div style="font-size:0.82rem; margin-top:0.5rem;">${stars}${comment ? ` &mdash; <em style="color:var(--muted);">${comment}</em>` : ''}</div>`;
+        `<div style="font-size:0.82rem; margin-top:0.5rem;">${stars}${comment ? ` &mdash; <em style="color:var(--muted);">${escapeHtml(comment)}</em>` : ''}</div>`;
     }
   }
 
