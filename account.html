@@ -219,6 +219,7 @@
       .from('listings')
       .select('*')
       .eq('user_id', currentUser.id)
+      .eq('is_dummy', false)
       .order('created_at', { ascending: false });
 
     if (error || !data || data.length === 0) {

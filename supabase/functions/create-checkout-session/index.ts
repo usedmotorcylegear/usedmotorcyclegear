@@ -23,11 +23,12 @@ Deno.serve(async (req) => {
     // Always fetch price from DB — never trust the frontend amount
     const { data: listing } = await supabase
       .from('listings')
-      .select('price, status, user_id, title')
+      .select('price, status, user_id, title, is_dummy')
       .eq('id', listingId)
       .single();
 
     if (!listing) throw new Error('Listing not found');
+    if (listing.is_dummy) throw new Error('This is a sample listing and cannot be purchased');
     if (listing.status !== 'active') throw new Error('This item is no longer available');
     if (listing.user_id === buyerId) throw new Error('You cannot purchase your own listing');
 
