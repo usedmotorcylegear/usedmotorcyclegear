@@ -250,7 +250,8 @@
         .order('created_at', { ascending: false });
 
       const existingOffer = offerRows && offerRows.length > 0 ? offerRows[0] : null;
-      if (existingOffer) {
+      const offerExpired = existingOffer?.expires_at && new Date(existingOffer.expires_at) < new Date();
+      if (existingOffer && !offerExpired) {
         const offerToggle = document.getElementById('offer-toggle-btn');
         const offerFormEl = document.getElementById('offer-form');
         offerToggle.style.display = 'none';
@@ -269,6 +270,20 @@
               </div>
             </div>`;
         }
+      } else if (offerExpired) {
+        const offerToggle = document.getElementById('offer-toggle-btn');
+        const offerFormEl = document.getElementById('offer-form');
+        offerToggle.style.display = 'none';
+        offerFormEl.style.display = 'block';
+        offerFormEl.innerHTML = `
+          <div style="font-size:0.8rem; color:var(--muted); margin-bottom:0.6rem; padding:0.5rem 0.75rem; background:var(--bg); border:1px solid var(--border); border-radius:4px;">Your previous offer expired. Make a new one:</div>
+          <div style="display:flex; gap:0.5rem; align-items:center; margin-bottom:0.5rem;">
+            <span style="font-size:1rem; font-weight:700;">$</span>
+            <input type="number" id="offer-amount" placeholder="Your offer" min="1" step="0.01" style="flex:1;" />
+          </div>
+          <button id="offer-submit-btn" class="btn btn-dark btn-full">Submit Offer</button>
+          <div id="offer-alert" style="margin-top:0.5rem;"></div>`;
+        document.getElementById('offer-submit-btn').addEventListener('click', () => submitOffer(listing.user_id, listing.id));
       }
     } else {
       contactEl.innerHTML = `<a href="auth.html?next=listing.html%3Fid%3D${id}" class="btn btn-dark btn-full">Sign in to Buy or Message</a>`;
@@ -296,7 +311,8 @@
       listing_id: listingId,
       buyer_id: user.id,
       seller_id: sellerId,
-      amount
+      amount,
+      expires_at: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString()
     });
     if (error) {
       alertEl.innerHTML = '<div class="alert alert-error">Failed to submit offer. Try again.</div>';

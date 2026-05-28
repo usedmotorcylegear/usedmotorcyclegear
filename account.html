@@ -328,14 +328,11 @@
       return;
     }
 
-    container.innerHTML = data.map(offer => `
-      <div class="my-listing-row" style="flex-wrap:wrap; gap:0.75rem; align-items:flex-start;">
-        <div class="my-listing-info">
-          <div class="my-listing-title"><a href="listing.html?id=${offer.listings?.id}" style="color:inherit;">${offer.listings?.title || 'Listing'}</a></div>
-          <div class="my-listing-price">Offer: $${Number(offer.amount).toLocaleString()}</div>
-          <div style="font-size:0.8rem; color:var(--muted); margin-top:0.2rem;">${new Date(offer.created_at).toLocaleDateString()}</div>
-        </div>
-        ${offer.status === 'pending' ? `
+    container.innerHTML = data.map(offer => {
+      const isExpired = offer.expires_at && new Date(offer.expires_at) < new Date();
+      const actionHtml = (isExpired && ['pending', 'countered'].includes(offer.status))
+        ? `<span style="font-size:0.85rem; font-weight:600; color:var(--muted);">Expired</span>`
+        : offer.status === 'pending' ? `
           <div style="display:flex; gap:0.5rem; flex-shrink:0; flex-wrap:wrap;">
             <button class="btn btn-dark" style="padding:0.4rem 0.9rem; font-size:0.85rem;" onclick="respondToOffer('${offer.id}', '${offer.buyer_id}', '${offer.listing_id}', ${offer.amount}, 'accepted')">Accept</button>
             <button class="btn btn-danger" style="padding:0.4rem 0.9rem; font-size:0.85rem;" onclick="respondToOffer('${offer.id}', '${offer.buyer_id}', '${offer.listing_id}', ${offer.amount}, 'declined')">Decline</button>
@@ -347,12 +344,20 @@
               <input type="number" id="counter-input-${offer.id}" placeholder="Counter amount" min="1" step="0.01" style="flex:1; max-width:160px;" />
               <button class="btn btn-dark" style="padding:0.4rem 0.9rem; font-size:0.85rem;" onclick="submitCounter('${offer.id}', '${offer.buyer_id}', '${offer.listing_id}')">Send</button>
             </div>
-          </div>` :
-        offer.status === 'countered' ? `
-          <span style="font-size:0.85rem; font-weight:600; color:var(--muted);">Countered at $${Number(offer.counter_amount).toLocaleString()} &mdash; awaiting buyer response</span>` :
-        `<span style="font-size:0.85rem; font-weight:600; color:${offer.status === 'accepted' ? 'var(--success)' : 'var(--danger)'};">${offer.status === 'accepted' ? '&#10003; Accepted' : '&#10007; Declined'}</span>`}
-      </div>
-    `).join('');
+          </div>`
+        : offer.status === 'countered' ? `
+          <span style="font-size:0.85rem; font-weight:600; color:var(--muted);">Countered at $${Number(offer.counter_amount).toLocaleString()} &mdash; awaiting buyer response</span>`
+        : `<span style="font-size:0.85rem; font-weight:600; color:${offer.status === 'accepted' ? 'var(--success)' : 'var(--danger)'};">${offer.status === 'accepted' ? '&#10003; Accepted' : '&#10007; Declined'}</span>`;
+      return `
+      <div class="my-listing-row" style="flex-wrap:wrap; gap:0.75rem; align-items:flex-start;">
+        <div class="my-listing-info">
+          <div class="my-listing-title"><a href="listing.html?id=${offer.listings?.id}" style="color:inherit;">${offer.listings?.title || 'Listing'}</a></div>
+          <div class="my-listing-price">Offer: $${Number(offer.amount).toLocaleString()}</div>
+          <div style="font-size:0.8rem; color:var(--muted); margin-top:0.2rem;">${new Date(offer.created_at).toLocaleDateString()}</div>
+        </div>
+        ${actionHtml}
+      </div>`;
+    }).join('');
   }
 
   async function respondToOffer(offerId, buyerId, listingId, amount, status) {
@@ -411,30 +416,35 @@
       return;
     }
 
-    container.innerHTML = data.map(offer => `
-      <div class="my-listing-row" style="flex-wrap:wrap; gap:0.75rem; align-items:flex-start;">
-        <div class="my-listing-info">
-          <div class="my-listing-title"><a href="listing.html?id=${offer.listings?.id}" style="color:inherit;">${offer.listings?.title || 'Listing'}</a></div>
-          <div class="my-listing-price">Your offer: $${Number(offer.amount).toLocaleString()}</div>
-          <div style="font-size:0.8rem; color:var(--muted); margin-top:0.2rem;">${new Date(offer.created_at).toLocaleDateString()}</div>
-        </div>
-        ${offer.status === 'countered' ? `
+    container.innerHTML = data.map(offer => {
+      const isExpired = offer.expires_at && new Date(offer.expires_at) < new Date();
+      const actionHtml = (isExpired && ['pending', 'countered'].includes(offer.status))
+        ? `<span style="font-size:0.85rem; font-weight:700; flex-shrink:0; color:var(--muted);">Expired</span>`
+        : offer.status === 'countered' ? `
           <div style="flex-shrink:0;">
             <div style="font-size:0.85rem; margin-bottom:0.4rem; font-weight:600;">Counter: $${Number(offer.counter_amount).toLocaleString()}</div>
             <div style="display:flex; gap:0.5rem;">
               <a href="checkout.html?id=${offer.listing_id}&offer=${offer.counter_amount}" class="btn btn-dark" style="padding:0.4rem 0.8rem; font-size:0.82rem;">Accept</a>
               <button class="btn btn-danger" style="padding:0.4rem 0.8rem; font-size:0.82rem;" onclick="declineOffer('${offer.id}')">Decline</button>
             </div>
-          </div>` :
-        offer.status === 'accepted' ? `
+          </div>`
+        : offer.status === 'accepted' ? `
           <div style="flex-shrink:0;">
             <a href="checkout.html?id=${offer.listing_id}&offer=${offer.amount}" class="btn btn-primary" style="padding:0.4rem 0.9rem; font-size:0.85rem;">Complete Purchase</a>
-          </div>` :
-        `<span style="font-size:0.85rem; font-weight:700; flex-shrink:0; color:${offer.status === 'declined' ? 'var(--danger)' : 'var(--muted)'};">
+          </div>`
+        : `<span style="font-size:0.85rem; font-weight:700; flex-shrink:0; color:${offer.status === 'declined' ? 'var(--danger)' : 'var(--muted)'};">
           ${offer.status === 'declined' ? '&#10007; Declined' : '&#8987; Pending'}
-        </span>`}
-      </div>
-    `).join('');
+        </span>`;
+      return `
+      <div class="my-listing-row" style="flex-wrap:wrap; gap:0.75rem; align-items:flex-start;">
+        <div class="my-listing-info">
+          <div class="my-listing-title"><a href="listing.html?id=${offer.listings?.id}" style="color:inherit;">${offer.listings?.title || 'Listing'}</a></div>
+          <div class="my-listing-price">Your offer: $${Number(offer.amount).toLocaleString()}</div>
+          <div style="font-size:0.8rem; color:var(--muted); margin-top:0.2rem;">${new Date(offer.created_at).toLocaleDateString()}</div>
+        </div>
+        ${actionHtml}
+      </div>`;
+    }).join('');
   }
 
   async function loadOrders() {
