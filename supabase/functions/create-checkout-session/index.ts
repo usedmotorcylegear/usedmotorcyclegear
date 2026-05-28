@@ -26,6 +26,9 @@ Deno.serve(async (req) => {
         quantity: 1,
       }],
       mode: 'payment',
+      shipping_address_collection: {
+        allowed_countries: ['US', 'CA'],
+      },
       success_url: `https://usedmotorcyclegear.com/success.html?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `https://usedmotorcyclegear.com/listing.html?id=${listingId}`,
       metadata: {

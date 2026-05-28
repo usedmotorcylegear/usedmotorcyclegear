@@ -26,6 +26,18 @@ Deno.serve(async (req) => {
     const platform_fee = +(amount * 0.1333).toFixed(2);
     const seller_payout = +(amount - platform_fee).toFixed(2);
 
+    // Extract shipping address from Stripe session
+    const shipping = session.shipping_details;
+    const shipping_address = shipping ? {
+      name: shipping.name,
+      line1: shipping.address?.line1,
+      line2: shipping.address?.line2 || null,
+      city: shipping.address?.city,
+      state: shipping.address?.state,
+      postal_code: shipping.address?.postal_code,
+      country: shipping.address?.country,
+    } : null;
+
     const { error } = await supabase.from('orders').insert({
       listing_id,
       seller_id,
@@ -36,6 +48,7 @@ Deno.serve(async (req) => {
       referral_code: referral_code || null,
       referral_payout: Number(referral_payout) || 0,
       stripe_session_id: session.id,
+      shipping_address,
       status: 'paid',
     });
 

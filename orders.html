@@ -276,6 +276,22 @@
       }
     }
 
+    // Shipping address — shown to sellers only
+    let shippingHtml = '';
+    if (type === 'sale' && order.shipping_address) {
+      const s = order.shipping_address;
+      const addrLine = [s.line1, s.line2].filter(Boolean).join(', ');
+      const cityLine = [s.city, s.state, s.postal_code].filter(Boolean).join(', ');
+      const countryLine = s.country && s.country !== 'US' ? s.country : '';
+      shippingHtml = `
+        <div style="margin-top:0.6rem; padding:0.6rem 0.75rem; background:var(--bg); border:1px solid var(--border); border-radius:6px; font-size:0.82rem; line-height:1.55;">
+          <div style="font-weight:700; margin-bottom:0.2rem;">📦 Ship to:</div>
+          <div>${s.name || ''}</div>
+          <div>${addrLine}</div>
+          <div>${cityLine}${countryLine ? ', ' + countryLine : ''}</div>
+        </div>`;
+    }
+
     // Add tracking form for sellers who haven't shipped yet
     const addTrackingHtml = (type === 'sale' && order.status === 'paid') ? `
       <div class="add-tracking-form">
@@ -308,6 +324,7 @@
           <div class="order-price">${amount}</div>
           <div class="order-meta">${date}</div>
           ${trackingHtml}
+          ${shippingHtml}
           ${payoutHtml}
           ${deliveryHtml}
           ${confirmHtml}
