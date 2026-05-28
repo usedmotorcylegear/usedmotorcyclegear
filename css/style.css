@@ -485,8 +485,9 @@ select.filter-select:focus { outline: none; border-color: var(--text); }
 
 .listing-images img {
   width: 100%;
-  object-fit: cover;
-  max-height: 520px;
+  object-fit: contain;
+  max-height: 600px;
+  background: var(--bg);
   margin-bottom: 0.75rem;
   display: block;
 }
