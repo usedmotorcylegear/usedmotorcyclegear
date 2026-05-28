@@ -486,8 +486,8 @@
         </div>
         ${order.status === 'paid' && !order.tracking_number ? `
           <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
-            <input type="text" id="tracking-${order.id}" placeholder="Enter tracking number" style="width:200px;" />
-            <button class="btn btn-dark" style="padding:0.45rem 0.9rem; font-size:0.85rem;" onclick="submitTracking('${order.id}')">Mark Shipped</button>
+            <input type="text" id="tracking-${order.id}" placeholder="Enter tracking number" style="width:200px;" oninput="document.getElementById('ship-btn-${order.id}').disabled=!this.value.trim(); document.getElementById('ship-btn-${order.id}').style.opacity=this.value.trim()?'1':'0.45';" />
+            <button id="ship-btn-${order.id}" class="btn btn-dark" style="padding:0.45rem 0.9rem; font-size:0.85rem; opacity:0.45; cursor:not-allowed;" disabled onclick="submitTracking('${order.id}')">Mark Shipped</button>
           </div>` : ''}
         ${order.tracking_number ? `<div style="font-size:0.85rem; color:var(--success);">Shipped — Tracking: ${order.tracking_number}</div>` : ''}
       </div>

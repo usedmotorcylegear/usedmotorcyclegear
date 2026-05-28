@@ -59,8 +59,9 @@
     .add-tracking-form { margin-top: 0.75rem; display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
     .add-tracking-form select, .add-tracking-form input { font-size: 0.82rem; padding: 0.4rem 0.6rem; border: 1px solid var(--border); border-radius: 4px; background: var(--bg); color: var(--text); }
     .add-tracking-form input { flex: 1; min-width: 140px; }
-    .add-tracking-form button { font-size: 0.82rem; padding: 0.4rem 0.9rem; background: var(--text); color: #fff; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap; }
-    .add-tracking-form button:hover { background: var(--primary); }
+    .add-tracking-form button { font-size: 0.82rem; padding: 0.4rem 0.9rem; background: var(--text); color: #fff; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap; transition: opacity 0.15s; }
+    .add-tracking-form button:not([disabled]):hover { background: var(--primary); }
+    .add-tracking-form button:not([disabled]) { opacity: 1 !important; cursor: pointer !important; }
     .dispute-btn { font-size: 0.78rem; margin-top: 0.5rem; padding: 0.3rem 0.7rem; background: none; border: 1px solid var(--danger); color: var(--danger); border-radius: 4px; cursor: pointer; }
     .dispute-btn:hover { background: var(--danger); color: #fff; }
     .dispute-form { margin-top: 0.6rem; }
@@ -287,8 +288,8 @@
           <option value="ontrac">OnTrac</option>
           <option value="lasership">LaserShip</option>
         </select>
-        <input type="text" id="tracking-${order.id}" placeholder="Tracking number" />
-        <button onclick="submitTracking('${order.id}')">Mark Shipped</button>
+        <input type="text" id="tracking-${order.id}" placeholder="Tracking number" oninput="document.getElementById('ship-btn-${order.id}').disabled=!this.value.trim()" />
+        <button id="ship-btn-${order.id}" onclick="submitTracking('${order.id}')" disabled style="opacity:0.45;cursor:not-allowed;" onmouseenter="if(!this.disabled)this.style.background='var(--primary)'" onmouseleave="this.style.background=''">Mark Shipped</button>
       </div>
       <div id="tracking-alert-${order.id}" style="font-size:0.8rem;margin-top:0.25rem;"></div>
     ` : '';
