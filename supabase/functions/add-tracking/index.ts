@@ -5,8 +5,6 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 );
 
-const AFTERSHIP_API_KEY = Deno.env.get('AFTERSHIP_API_KEY')!;
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -37,32 +35,12 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Register tracking with AfterShip
-    const aftershipRes = await fetch('https://api.aftership.com/v4/trackings', {
-      method: 'POST',
-      headers: {
-        'aftership-api-key': AFTERSHIP_API_KEY,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        tracking: {
-          tracking_number: trackingNumber,
-          slug: carrier !== 'auto' ? carrier : undefined,
-          custom_fields: { order_id: orderId },
-        },
-      }),
-    });
-
-    const aftershipData = await aftershipRes.json();
-    const aftershipId = aftershipData?.data?.tracking?.id || null;
-
-    // Update order in Supabase — set 7-day auto-payout window from ship date
+    // Update order — set 7-day auto-payout window from ship date
     const autoPayoutAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     const { error } = await supabase.from('orders').update({
       tracking_number: trackingNumber,
       carrier,
       status: 'shipped',
-      aftership_tracking_id: aftershipId,
       payout_due_at: autoPayoutAt.toISOString(),
       payout_status: 'pending',
     }).eq('id', orderId);
