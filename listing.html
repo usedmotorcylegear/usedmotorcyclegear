@@ -149,12 +149,19 @@
     const currentUser = await getUser();
     const isOwner = currentUser && currentUser.id === listing.user_id;
 
+    const safeTitle    = escapeHtml(listing.title);
+    const safeCategory = escapeHtml(listing.category);
+    const safeCondition = escapeHtml(listing.condition);
+    const safeName     = escapeHtml(profile?.full_name || profile?.username || 'Anonymous');
+    const safeLocation = escapeHtml(profile?.location || listing.location || '');
+    const safeListingLocation = escapeHtml(listing.location || 'Not specified');
+
     content.innerHTML = `
       <div class="listing-detail-grid">
         <div class="ldg-images">
           <div class="listing-images">
             ${mainImg
-              ? `<img id="main-img" src="${mainImg}" alt="${listing.title}" />`
+              ? `<img id="main-img" src="${mainImg}" alt="${safeTitle}" />`
               : `<div style="width:100%;height:300px;background:var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:4rem;">🏍️</div>`}
             ${images.length > 1 ? `
               <div class="thumb-row">
@@ -165,22 +172,22 @@
 
         <div class="ldg-sidebar">
           <div class="seller-card">
-            <div class="listing-detail-title">${listing.title}</div>
+            <div class="listing-detail-title">${safeTitle}</div>
             <div class="listing-detail-price">$<span class="price-amount">${Number(listing.price).toLocaleString()}</span></div>
-            <span class="badge">${listing.category}</span>
-            <span class="badge">${listing.condition}</span>
+            <span class="badge">${safeCategory}</span>
+            <span class="badge">${safeCondition}</span>
 
             <h3 style="margin-bottom:0.75rem; font-size:0.85rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em;">Seller</h3>
             <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.5rem;">
               <div class="seller-avatar">
                 ${profile?.avatar_url
-                  ? `<img src="${profile.avatar_url}" alt="${profile?.full_name || 'Seller'}" />`
-                  : `${(profile?.full_name || profile?.username || '?').charAt(0).toUpperCase()}`}
+                  ? `<img src="${profile.avatar_url}" alt="${safeName}" />`
+                  : `${safeName.charAt(0).toUpperCase()}`}
               </div>
               <div>
-                <div class="seller-name" style="margin-bottom:0;">${profile?.full_name || profile?.username || 'Anonymous'}</div>
+                <div class="seller-name" style="margin-bottom:0;">${safeName}</div>
                 ${ratingBadge}
-                <div class="seller-location">${profile?.location || listing.location || ''}</div>
+                <div class="seller-location">${safeLocation}</div>
               </div>
             </div>
 
@@ -197,9 +204,9 @@
           <div class="detail-section">
             <h3>Details</h3>
             <p>
-              <strong>Category:</strong> ${listing.category}<br/>
-              <strong>Condition:</strong> ${listing.condition}<br/>
-              <strong>Location:</strong> ${listing.location || 'Not specified'}<br/>
+              <strong>Category:</strong> ${safeCategory}<br/>
+              <strong>Condition:</strong> ${safeCondition}<br/>
+              <strong>Location:</strong> ${safeListingLocation}<br/>
               <strong>Posted:</strong> ${new Date(listing.created_at).toLocaleDateString()}
             </p>
           </div>

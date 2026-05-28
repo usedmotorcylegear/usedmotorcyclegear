@@ -24,6 +24,7 @@ Deno.serve(async (req) => {
         status: 'delivered',
         delivered_at: deliveredAt.toISOString(),
         payout_due_at: payoutDueAt.toISOString(),
+        payout_status: 'pending',
       }).eq('id', orderId);
 
     } else if (tag === 'InTransit' || tag === 'OutForDelivery') {

@@ -103,6 +103,10 @@
 <script src="js/config.js"></script>
 <script src="js/auth.js"></script>
 <script>
+  function escapeHtml(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
   async function load() {
     const user = await requireAuth();
     const container = document.getElementById('orders-content');
@@ -152,7 +156,7 @@
 
   function orderRow(order, type, myRatings = {}) {
     const img = order.listings?.images?.[0];
-    const title = order.listings?.title || 'Item';
+    const title = escapeHtml(order.listings?.title || 'Item');
     const amount = type === 'sale'
       ? `You receive: $${Number(order.seller_payout).toLocaleString()}`
       : `$${Number(order.amount).toLocaleString()}`;
@@ -178,14 +182,17 @@
     // Tracking display
     let trackingHtml = '';
     if (order.tracking_number) {
+      const safeTracking = encodeURIComponent(order.tracking_number);
       const carrierLinks = {
-        usps: `https://tools.usps.com/go/TrackConfirmAction?tLabels=${order.tracking_number}`,
-        ups: `https://www.ups.com/track?tracknum=${order.tracking_number}`,
-        fedex: `https://www.fedex.com/fedextrack/?trknbr=${order.tracking_number}`,
-        dhl: `https://www.dhl.com/us-en/home/tracking.html?tracking-id=${order.tracking_number}`,
+        usps:       `https://tools.usps.com/go/TrackConfirmAction?tLabels=${safeTracking}`,
+        ups:        `https://www.ups.com/track?tracknum=${safeTracking}`,
+        fedex:      `https://www.fedex.com/fedextrack/?trknbr=${safeTracking}`,
+        'dhl-express': `https://www.dhl.com/us-en/home/tracking.html?tracking-id=${safeTracking}`,
+        ontrac:     `https://www.ontrac.com/trackingres.asp?tracking_number=${safeTracking}`,
+        lasership:  `https://www.lasership.com/track/${safeTracking}`,
       };
-      const trackUrl = carrierLinks[order.carrier] || '#';
-      trackingHtml = `<div class="tracking-note">📦 <a href="${trackUrl}" target="_blank" style="color:var(--success);">${order.carrier?.toUpperCase() || ''} ${order.tracking_number}</a></div>`;
+      const trackUrl = carrierLinks[order.carrier] || `https://www.google.com/search?q=${safeTracking}`;
+      trackingHtml = `<div class="tracking-note">📦 <a href="${trackUrl}" target="_blank" style="color:var(--success);">${escapeHtml(order.carrier?.toUpperCase() || '')} ${escapeHtml(order.tracking_number)}</a></div>`;
     }
 
     // Payout info for sellers
@@ -222,7 +229,7 @@
     // Dispute button/form
     let disputeHtml = '';
     if (order.status === 'disputed') {
-      disputeHtml = `<div class="dispute-note">⚠️ Dispute filed: ${order.dispute_reason || ''}</div>`;
+      disputeHtml = `<div class="dispute-note">⚠️ Dispute filed: ${escapeHtml(order.dispute_reason || '')}</div>`;
     } else if (type === 'purchase' && order.status === 'delivered') {
       // Buyer already confirmed receipt — gray out dispute button
       disputeHtml = `<button class="dispute-btn" disabled style="opacity:0.35;cursor:not-allowed;border-color:var(--muted);color:var(--muted);margin-top:0.5rem;">Flag a Problem</button>
@@ -345,15 +352,9 @@
 
     alertEl.innerHTML = 'Saving...';
 
-    const autoPayoutAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-
-    const { error } = await supabase.from('orders').update({
-      tracking_number: trackingNumber,
-      carrier,
-      status: 'shipped',
-      payout_due_at: autoPayoutAt.toISOString(),
-      payout_status: 'pending',
-    }).eq('id', orderId);
+    const { error } = await supabase.functions.invoke('add-tracking', {
+      body: { orderId, trackingNumber, carrier }
+    });
 
     if (error) {
       alertEl.innerHTML = `<span style="color:var(--danger)">${error.message}</span>`;

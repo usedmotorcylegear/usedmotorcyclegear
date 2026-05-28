@@ -16,7 +16,26 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
+    // Verify JWT — caller must be the seller for this order
+    const token = req.headers.get('Authorization')?.replace('Bearer ', '') ?? '';
+    const { data: { user } } = await supabase.auth.getUser(token);
+    if (!user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const { orderId, trackingNumber, carrier } = await req.json();
+
+    // Verify the authenticated user is the seller for this order
+    const { data: orderCheck } = await supabase.from('orders').select('seller_id').eq('id', orderId).single();
+    if (!orderCheck || orderCheck.seller_id !== user.id) {
+      return new Response(JSON.stringify({ error: 'Forbidden' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     // Register tracking with AfterShip
     const aftershipRes = await fetch('https://api.aftership.com/v4/trackings', {
@@ -37,12 +56,15 @@ Deno.serve(async (req) => {
     const aftershipData = await aftershipRes.json();
     const aftershipId = aftershipData?.data?.tracking?.id || null;
 
-    // Update order in Supabase
+    // Update order in Supabase — set 7-day auto-payout window from ship date
+    const autoPayoutAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     const { error } = await supabase.from('orders').update({
       tracking_number: trackingNumber,
       carrier,
       status: 'shipped',
       aftership_tracking_id: aftershipId,
+      payout_due_at: autoPayoutAt.toISOString(),
+      payout_status: 'pending',
     }).eq('id', orderId);
 
     if (error) throw new Error(error.message);

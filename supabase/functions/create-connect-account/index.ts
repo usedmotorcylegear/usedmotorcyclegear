@@ -16,7 +16,16 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
-    const { userId } = await req.json();
+    // Verify the calling user's identity from their JWT — never trust userId from the body
+    const token = req.headers.get('Authorization')?.replace('Bearer ', '') ?? '';
+    const { data: { user } } = await supabase.auth.getUser(token);
+    if (!user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    const userId = user.id;
 
     // Check if seller already has a Connect account
     const { data: profile } = await supabase

@@ -99,15 +99,19 @@
     grid.innerHTML = data.map(listing => `
       <a href="listing.html?id=${listing.id}" class="listing-card">
         ${listing.images && listing.images.length > 0
-          ? `<img src="${listing.images[0]}" alt="${listing.title}" loading="lazy" />`
+          ? `<img src="${listing.images[0]}" alt="${escapeHtml(listing.title)}" loading="lazy" />`
           : `<div class="placeholder-img">🏍️</div>`}
         <div class="listing-info">
-          <div class="listing-title">${listing.title}</div>
+          <div class="listing-title">${escapeHtml(listing.title)}</div>
           <div class="listing-price">$${Number(listing.price).toLocaleString()}</div>
-          <div class="listing-meta">${listing.category} &middot; ${listing.condition} &middot; ${listing.location || 'Location not set'}</div>
+          <div class="listing-meta">${escapeHtml(listing.category)} &middot; ${escapeHtml(listing.condition)} &middot; ${escapeHtml(listing.location || 'Location not set')}</div>
         </div>
       </a>
     `).join('');
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
   loadRecentListings();

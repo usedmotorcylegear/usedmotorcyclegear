@@ -132,6 +132,10 @@
 <script>
   let currentUser = null;
 
+  function escapeHtml(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
   async function init() {
     currentUser = await requireAuth();
 
@@ -230,12 +234,12 @@
     container.innerHTML = data.map(listing => `
       <div class="my-listing-row">
         ${listing.images && listing.images.length > 0
-          ? `<img src="${listing.images[0]}" alt="${listing.title}" />`
+          ? `<img src="${listing.images[0]}" alt="${escapeHtml(listing.title)}" />`
           : `<div class="thumb-placeholder">🏍️</div>`}
         <div class="my-listing-info">
-          <div class="my-listing-title">${listing.title}</div>
+          <div class="my-listing-title">${escapeHtml(listing.title)}</div>
           <div class="my-listing-price">$${Number(listing.price).toLocaleString()}</div>
-          <div style="font-size:0.8rem; color:var(--muted);">${listing.category} &middot; ${listing.condition} &middot; ${listing.status}</div>
+          <div style="font-size:0.8rem; color:var(--muted);">${escapeHtml(listing.category)} &middot; ${escapeHtml(listing.condition)} &middot; ${escapeHtml(listing.status)}</div>
         </div>
         <div class="my-listing-actions">
           <a href="listing.html?id=${listing.id}" class="btn btn-outline">View</a>
@@ -301,9 +305,9 @@
       <a href="messages.html?listing=${msg.listing_id}&with=${msg.sender_id}" class="my-listing-row" style="display:flex; text-decoration:none; ${!msg.read ? 'border-left:3px solid var(--primary);' : ''}">
         <div class="my-listing-info">
           <div class="my-listing-title" style="font-size:0.8rem; color:var(--muted); margin-bottom:0.25rem;">
-            Re: ${msg.listings?.title || 'Listing'} &middot; ${new Date(msg.created_at).toLocaleDateString()}
+            Re: ${escapeHtml(msg.listings?.title || 'Listing')} &middot; ${new Date(msg.created_at).toLocaleDateString()}
           </div>
-          <div style="font-size:0.9rem; color:var(--text);">${msg.body}</div>
+          <div style="font-size:0.9rem; color:var(--text);">${escapeHtml(msg.body)}</div>
         </div>
         <div style="color:var(--muted); font-size:1.2rem; align-self:center; padding-left:1rem;">›</div>
       </a>
@@ -351,7 +355,7 @@
       return `
       <div class="my-listing-row" style="flex-wrap:wrap; gap:0.75rem; align-items:flex-start;">
         <div class="my-listing-info">
-          <div class="my-listing-title"><a href="listing.html?id=${offer.listings?.id}" style="color:inherit;">${offer.listings?.title || 'Listing'}</a></div>
+          <div class="my-listing-title"><a href="listing.html?id=${offer.listings?.id}" style="color:inherit;">${escapeHtml(offer.listings?.title || 'Listing')}</a></div>
           <div class="my-listing-price">Offer: $${Number(offer.amount).toLocaleString()}</div>
           <div style="font-size:0.8rem; color:var(--muted); margin-top:0.2rem;">${new Date(offer.created_at).toLocaleDateString()}</div>
         </div>
@@ -438,7 +442,7 @@
       return `
       <div class="my-listing-row" style="flex-wrap:wrap; gap:0.75rem; align-items:flex-start;">
         <div class="my-listing-info">
-          <div class="my-listing-title"><a href="listing.html?id=${offer.listings?.id}" style="color:inherit;">${offer.listings?.title || 'Listing'}</a></div>
+          <div class="my-listing-title"><a href="listing.html?id=${offer.listings?.id}" style="color:inherit;">${escapeHtml(offer.listings?.title || 'Listing')}</a></div>
           <div class="my-listing-price">Your offer: $${Number(offer.amount).toLocaleString()}</div>
           <div style="font-size:0.8rem; color:var(--muted); margin-top:0.2rem;">${new Date(offer.created_at).toLocaleDateString()}</div>
         </div>
@@ -463,7 +467,7 @@
     container.innerHTML = data.map(order => `
       <div class="my-listing-row">
         <div class="my-listing-info">
-          <div class="my-listing-title">${order.listings?.title || 'Item'}</div>
+          <div class="my-listing-title">${escapeHtml(order.listings?.title || 'Item')}</div>
           <div class="my-listing-price">$${Number(order.amount).toLocaleString()}</div>
           <div style="font-size:0.8rem; color:var(--muted); margin-top:0.2rem;">
             Status: <strong>${formatStatus(order.status)}</strong>
@@ -490,15 +494,25 @@
     container.innerHTML = data.map(order => `
       <div class="my-listing-row" style="flex-wrap:wrap; gap:0.75rem;">
         <div class="my-listing-info">
-          <div class="my-listing-title">${order.listings?.title || 'Item'}</div>
+          <div class="my-listing-title">${escapeHtml(order.listings?.title || 'Item')}</div>
           <div class="my-listing-price">You receive: $${Number(order.seller_payout).toLocaleString()}</div>
           <div style="font-size:0.8rem; color:var(--muted); margin-top:0.2rem;">Status: <strong>${formatStatus(order.status)}</strong></div>
         </div>
         ${order.status === 'paid' && !order.tracking_number ? `
-          <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
-            <input type="text" id="tracking-${order.id}" placeholder="Enter tracking number" style="width:200px;" oninput="document.getElementById('ship-btn-${order.id}').disabled=!this.value.trim(); document.getElementById('ship-btn-${order.id}').style.opacity=this.value.trim()?'1':'0.45';" />
+          <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap; margin-top:0.5rem;">
+            <select id="carrier-${order.id}" style="padding:0.4rem 0.6rem; border:1px solid var(--border); border-radius:4px; background:var(--bg); color:var(--text); font-size:0.82rem;">
+              <option value="auto">Auto-detect carrier</option>
+              <option value="usps">USPS</option>
+              <option value="ups">UPS</option>
+              <option value="fedex">FedEx</option>
+              <option value="dhl-express">DHL</option>
+              <option value="ontrac">OnTrac</option>
+              <option value="lasership">LaserShip</option>
+            </select>
+            <input type="text" id="tracking-${order.id}" placeholder="Tracking number" style="flex:1; min-width:150px;" oninput="document.getElementById('ship-btn-${order.id}').disabled=!this.value.trim(); document.getElementById('ship-btn-${order.id}').style.opacity=this.value.trim()?'1':'0.45';" />
             <button id="ship-btn-${order.id}" class="btn btn-dark" style="padding:0.45rem 0.9rem; font-size:0.85rem; opacity:0.45; cursor:not-allowed;" disabled onclick="submitTracking('${order.id}')">Mark Shipped</button>
-          </div>` : ''}
+          </div>
+          <div id="tracking-alert-${order.id}" style="font-size:0.8rem;margin-top:0.25rem;"></div>` : ''}
         ${order.tracking_number ? `<div style="font-size:0.85rem; color:var(--success);">Shipped — Tracking: ${order.tracking_number}</div>` : ''}
       </div>
     `).join('');
@@ -506,20 +520,19 @@
 
   async function submitTracking(orderId) {
     const tracking = document.getElementById(`tracking-${orderId}`).value.trim();
+    const carrier = document.getElementById(`carrier-${orderId}`)?.value || 'auto';
+    const alertEl = document.getElementById(`tracking-alert-${orderId}`);
     if (!tracking) return alert('Please enter a tracking number.');
-    const autoPayoutAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    const { error } = await supabase.from('orders').update({
-      tracking_number: tracking,
-      status: 'shipped',
-      shipped_at: new Date().toISOString(),
-      payout_due_at: autoPayoutAt.toISOString(),
-      payout_status: 'pending',
-    }).eq('id', orderId);
+    if (alertEl) alertEl.innerHTML = 'Saving...';
+    const { error } = await supabase.functions.invoke('add-tracking', {
+      body: { orderId, trackingNumber: tracking, carrier }
+    });
     if (!error) {
       supabase.functions.invoke('send-email', { body: { type: 'item_shipped', orderId } });
       loadSales();
     } else {
-      alert('Error saving tracking number.');
+      if (alertEl) alertEl.innerHTML = `<span style="color:var(--danger)">${error.message}</span>`;
+      else alert('Error saving tracking number.');
     }
   }
 
@@ -537,9 +550,8 @@
 
   function loadPayoutStatus(profile) {
     const container = document.getElementById('payout-setup');
-    const returningFromStripe = new URLSearchParams(window.location.search).get('payout') === 'connected';
 
-    if (returningFromStripe || profile?.stripe_account_id) {
+    if (profile?.stripe_account_id) {
       container.innerHTML = `
         <div style="color:var(--success); font-weight:700; font-size:0.95rem;">✅ Payouts connected</div>
         <p style="color:var(--muted); font-size:0.875rem; margin-top:0.4rem;">Your earnings are deposited to your bank automatically when orders complete.</p>`;
