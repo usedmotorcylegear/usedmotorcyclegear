@@ -463,10 +463,75 @@ select.filter-select:focus { outline: none; border-color: var(--text); }
   .seller-card { position: static; top: auto; }
 
   /* ACCOUNT */
-  .account-page { padding: 0 1.25rem; margin: 1.5rem 0; }
-  .account-grid { grid-template-columns: 1fr; gap: 1.5rem; }
-  .my-listing-row { flex-wrap: wrap; }
-  .my-listing-actions { width: 100%; justify-content: flex-start; margin-top: 0.5rem; }
+  .account-page { padding: 0 1rem; margin: 1rem 0; }
+  .account-grid { grid-template-columns: 1fr; gap: 1rem; }
+
+  /* Compact sidebar: avatar + name/email side by side, nav as scrollable strip */
+  .account-sidebar {
+    display: grid;
+    grid-template-columns: 62px 1fr;
+    column-gap: 0.75rem;
+    padding: 1rem;
+    border: none;
+    border-bottom: 2px solid var(--text);
+    margin-bottom: 0.25rem;
+    background: transparent;
+  }
+  .account-avatar {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    width: 62px;
+    height: 62px;
+    font-size: 1.3rem;
+    margin-bottom: 0;
+    align-self: center;
+  }
+  .account-username {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: end;
+    padding-bottom: 0.1rem;
+  }
+  .account-email {
+    grid-column: 2;
+    grid-row: 2;
+    margin-bottom: 0;
+    align-self: start;
+    padding-top: 0.1rem;
+  }
+  .sidebar-links {
+    grid-column: 1 / 3;
+    grid-row: 3;
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    border-top: 1px solid var(--border);
+    margin-top: 0.85rem;
+    padding-top: 0.65rem;
+    padding-bottom: 0.1rem;
+    gap: 0;
+  }
+  .sidebar-links::-webkit-scrollbar { display: none; }
+  .sidebar-links li { flex-shrink: 0; }
+  .sidebar-links li a {
+    display: block;
+    padding: 0.3rem 0.85rem;
+    border-bottom: none;
+    border-right: 1px solid var(--border);
+    font-size: 0.82rem;
+    white-space: nowrap;
+    color: var(--muted);
+  }
+  .sidebar-links li:last-child a { border-right: none; }
+
+  /* Listing rows */
+  .my-listing-row { flex-wrap: wrap; gap: 0.75rem; }
+  .my-listing-row img, .my-listing-row .thumb-placeholder { width: 68px; height: 52px; }
+  .my-listing-title { white-space: normal; }
+  .my-listing-actions { width: 100%; justify-content: flex-start; margin-top: 0; }
+  .account-section-title { margin-bottom: 1rem; }
 
   /* FORMS */
   .form-page { margin: 2rem auto; padding: 0 1.25rem; }
