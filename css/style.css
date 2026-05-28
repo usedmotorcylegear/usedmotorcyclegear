@@ -805,6 +805,17 @@ footer a:hover { color: var(--primary); }
   transition: all 0.15s;
 }
 
+/* Account page mobile overrides — must come after desktop account styles to win cascade */
+@media (max-width: 768px) {
+  .account-page { padding: 0 1.25rem; margin: 1.5rem 0; }
+  .account-grid { grid-template-columns: 1fr; gap: 2rem; }
+  .my-listing-row { flex-wrap: wrap; gap: 0.75rem; }
+  .my-listing-row img, .my-listing-row .thumb-placeholder { width: 68px; height: 52px; }
+  .my-listing-title { white-space: normal; }
+  .my-listing-actions { width: 100%; justify-content: flex-start; margin-top: 0; }
+  .account-section-title { margin-bottom: 1rem; }
+}
+
 .category-pill:hover {
   background: var(--text);
   color: #fff;
