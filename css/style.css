@@ -485,11 +485,9 @@ select.filter-select:focus { outline: none; border-color: var(--text); }
 
 .listing-images img {
   width: 100%;
-  object-fit: contain;
-  max-height: 600px;
-  background: var(--bg);
-  margin-bottom: 0.75rem;
+  height: auto;
   display: block;
+  margin-bottom: 0.75rem;
 }
 
 .thumb-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
