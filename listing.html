@@ -206,6 +206,7 @@
             <p>
               <strong>Category:</strong> ${safeCategory}<br/>
               <strong>Condition:</strong> ${safeCondition}<br/>
+              ${listing.size ? `<strong>Size:</strong> ${escapeHtml(listing.size)}<br/>` : ''}
               <strong>Location:</strong> ${safeListingLocation}<br/>
               <strong>Posted:</strong> ${new Date(listing.created_at).toLocaleDateString()}
             </p>

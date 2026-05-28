@@ -67,6 +67,11 @@
         </div>
       </div>
 
+      <div class="form-group">
+        <label>Size <span style="font-weight:400;color:var(--muted);">(optional)</span></label>
+        <input type="text" id="size" placeholder="e.g. L, XL, 52 EU, 10 US, M" />
+      </div>
+
       <div class="form-row">
         <div class="form-group">
           <label>Price ($)</label>
@@ -140,6 +145,7 @@
         document.getElementById('title').value = data.title;
         document.getElementById('category').value = data.category;
         document.getElementById('condition').value = data.condition;
+        document.getElementById('size').value = data.size || '';
         document.getElementById('price').value = data.price;
         document.getElementById('location').value = data.location || '';
         document.getElementById('description').value = data.description || '';
@@ -200,6 +206,7 @@
         condition: document.getElementById('condition').value,
         price: parseFloat(document.getElementById('price').value),
         location: document.getElementById('location').value.trim(),
+        size: document.getElementById('size').value.trim() || null,
         description: document.getElementById('description').value.trim(),
         status: 'active',
         ...(imageUrls.length > 0 && { images: imageUrls }),
