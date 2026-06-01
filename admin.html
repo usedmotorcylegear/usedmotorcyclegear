@@ -39,6 +39,28 @@
     .stat-card .label { font-size: 0.78rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 0.2rem; }
     .admin-alert { font-size: 0.82rem; margin-top: 0.3rem; }
     .empty-admin { padding: 3rem; text-align: center; color: var(--muted); font-size: 0.9rem; }
+
+    /* GROWTH TAB */
+    .growth-stat-row { display:flex; gap:1.25rem; flex-wrap:wrap; margin-bottom:1.75rem; }
+    .growth-stat { flex:1; min-width:130px; padding:1.1rem 1.25rem; border:1px solid var(--border); }
+    .growth-stat .g-num { font-size:1.9rem; font-weight:900; letter-spacing:-0.03em; line-height:1; }
+    .growth-stat .g-label { font-size:0.72rem; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:0.06em; margin-top:0.3rem; }
+    .growth-stat .g-change { font-size:0.78rem; font-weight:700; margin-top:0.35rem; }
+    .g-up { color:#3a9e3a; } .g-down { color:var(--danger); } .g-flat { color:var(--muted); }
+    .growth-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; margin-bottom:1.25rem; }
+    .chart-card { padding:1.25rem 1.5rem; border:1px solid var(--border); }
+    .chart-card h3 { font-size:0.72rem; font-weight:800; text-transform:uppercase; letter-spacing:0.07em; color:var(--muted); margin-bottom:1rem; }
+    .chart-card .chart-total { font-size:1.5rem; font-weight:900; letter-spacing:-0.03em; margin-bottom:0.15rem; }
+    .chart-card .chart-sub { font-size:0.78rem; color:var(--muted); margin-bottom:1rem; }
+    .bar-chart-wrap { margin-top:0.5rem; }
+    .bc-vals { display:flex; gap:4px; margin-bottom:2px; }
+    .bc-vals span { flex:1; text-align:center; font-size:8.5px; color:var(--muted); min-height:12px; }
+    .bc-bars { display:flex; gap:4px; align-items:flex-end; height:60px; }
+    .bc-bars div { flex:1; border-radius:2px 2px 0 0; transition:height 0.3s; }
+    .bc-labels { display:flex; gap:4px; margin-top:5px; }
+    .bc-labels span { flex:1; text-align:center; font-size:7.5px; color:var(--muted); overflow:hidden; white-space:nowrap; }
+    .visits-note { font-size:0.8rem; color:var(--muted); padding:1.5rem; text-align:center; }
+    @media (max-width:768px) { .growth-grid { grid-template-columns:1fr; } }
   </style>
 </head>
 <body>
@@ -77,6 +99,7 @@
     <button class="admin-tab" onclick="switchTab('orders', this)">All Orders</button>
     <button class="admin-tab" onclick="switchTab('listings', this)">Listings</button>
     <button class="admin-tab" onclick="switchTab('users', this)">Users</button>
+    <button class="admin-tab" onclick="switchTab('growth', this)">📈 Growth</button>
   </div>
 
   <!-- DISPUTES -->
@@ -97,6 +120,13 @@
   <!-- USERS -->
   <div class="admin-tab-panel" id="tab-users">
     <div id="users-list"><div class="loading">Loading...</div></div>
+  </div>
+
+  <!-- GROWTH -->
+  <div class="admin-tab-panel" id="tab-growth">
+    <div id="growth-stats-row" class="growth-stat-row"></div>
+    <div id="growth-charts-grid" class="growth-grid"></div>
+    <div id="growth-revenue-chart"></div>
   </div>
 
 </div>
@@ -136,6 +166,187 @@
     if (tab === 'orders') loadOrders();
     if (tab === 'listings') loadListings();
     if (tab === 'users') loadUsers();
+    if (tab === 'growth') loadGrowth();
+  }
+
+  // ── Growth helpers ────────────────────────────────────────────────
+
+  function getLast8Weeks() {
+    const result = [];
+    for (let i = 7; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i * 7);
+      const day = d.getDay();
+      d.setDate(d.getDate() - day + (day === 0 ? -6 : 1));
+      d.setHours(0, 0, 0, 0);
+      result.push(d.getTime());
+    }
+    return result;
+  }
+
+  function weekLabel(ts) {
+    return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  function bucketCounts(items, dateField, weekStarts) {
+    return weekStarts.map((ws, i) => {
+      const end = i < weekStarts.length - 1 ? weekStarts[i + 1] : Infinity;
+      return items.filter(x => { const t = new Date(x[dateField]).getTime(); return t >= ws && t < end; }).length;
+    });
+  }
+
+  function bucketSum(items, dateField, sumField, weekStarts) {
+    return weekStarts.map((ws, i) => {
+      const end = i < weekStarts.length - 1 ? weekStarts[i + 1] : Infinity;
+      return items
+        .filter(x => { const t = new Date(x[dateField]).getTime(); return t >= ws && t < end; })
+        .reduce((s, x) => s + (Number(x[sumField]) || 0), 0);
+    });
+  }
+
+  function changeLabel(curr, prev) {
+    if (prev === 0 && curr === 0) return '<span class="g-flat">— same</span>';
+    if (prev === 0) return `<span class="g-up">▲ ${curr} new</span>`;
+    const pct = Math.round(((curr - prev) / prev) * 100);
+    if (pct > 0) return `<span class="g-up">▲ ${pct}% vs last week</span>`;
+    if (pct < 0) return `<span class="g-down">▼ ${Math.abs(pct)}% vs last week</span>`;
+    return '<span class="g-flat">— same as last week</span>';
+  }
+
+  function renderBarChart(weekStarts, counts, color) {
+    const max = Math.max(...counts, 1);
+    return `
+      <div class="bar-chart-wrap">
+        <div class="bc-vals">${counts.map(c => `<span>${c || ''}</span>`).join('')}</div>
+        <div class="bc-bars">${counts.map(c => `<div style="height:${Math.max(Math.round(c/max*100), c > 0 ? 5 : 0)}%; background:${color};"></div>`).join('')}</div>
+        <div class="bc-labels">${weekStarts.map(w => `<span>${weekLabel(w)}</span>`).join('')}</div>
+      </div>`;
+  }
+
+  function renderRevenueChart(weekStarts, fees, gmvs) {
+    const max = Math.max(...gmvs, 1);
+    return `
+      <div class="chart-card">
+        <h3>Weekly GMV &amp; Platform Revenue (last 8 weeks)</h3>
+        <div style="display:flex; gap:1.5rem; margin-bottom:1rem; flex-wrap:wrap;">
+          <div><span style="display:inline-block;width:10px;height:10px;background:#6c6c6c;border-radius:2px;margin-right:4px;"></span><span style="font-size:0.8rem;color:var(--muted);">GMV (total sales)</span></div>
+          <div><span style="display:inline-block;width:10px;height:10px;background:var(--primary);border-radius:2px;margin-right:4px;"></span><span style="font-size:0.8rem;color:var(--muted);">Platform fee kept</span></div>
+        </div>
+        <div class="bc-vals">${gmvs.map(g => `<span>${g > 0 ? '$'+Math.round(g) : ''}</span>`).join('')}</div>
+        <div class="bc-bars" style="height:80px; position:relative; display:flex; gap:4px; align-items:flex-end;">
+          ${gmvs.map((g, i) => `
+            <div style="flex:1; position:relative; display:flex; gap:2px; align-items:flex-end; height:100%;">
+              <div style="flex:1; height:${Math.max(Math.round(g/max*100), g > 0 ? 4 : 0)}%; background:#6c6c6c; border-radius:2px 2px 0 0;"></div>
+              <div style="flex:1; height:${Math.max(Math.round(fees[i]/max*100), fees[i] > 0 ? 4 : 0)}%; background:var(--primary); border-radius:2px 2px 0 0;"></div>
+            </div>`).join('')}
+        </div>
+        <div class="bc-labels">${weekStarts.map(w => `<span>${weekLabel(w)}</span>`).join('')}</div>
+      </div>`;
+  }
+
+  async function loadGrowth() {
+    const statsEl = document.getElementById('growth-stats-row');
+    const chartsEl = document.getElementById('growth-charts-grid');
+    const revenueEl = document.getElementById('growth-revenue-chart');
+    statsEl.innerHTML = '<div class="loading" style="padding:1rem;">Loading growth data...</div>';
+    chartsEl.innerHTML = '';
+    revenueEl.innerHTML = '';
+
+    const weeks = getLast8Weeks();
+    const cutoff = new Date(weeks[0]).toISOString();
+
+    const [profilesRes, viewsRes, listingsRes, ordersRes, totalProfilesRes, totalOrdersRes] = await Promise.all([
+      supabase.from('profiles').select('created_at').gte('created_at', cutoff).eq('is_admin', false),
+      supabase.from('page_views').select('created_at, page').gte('created_at', cutoff),
+      supabase.from('listings').select('created_at').gte('created_at', cutoff).eq('is_dummy', false),
+      supabase.from('orders').select('created_at, amount, platform_fee').gte('created_at', cutoff),
+      supabase.from('profiles').select('id', { count: 'exact' }).eq('is_admin', false),
+      supabase.from('orders').select('id', { count: 'exact' }),
+    ]);
+
+    const profiles = profilesRes.data || [];
+    const views = viewsRes.data || [];
+    const listings = listingsRes.data || [];
+    const orders = ordersRes.data || [];
+    const hasViews = !viewsRes.error;
+
+    const accountsByWeek  = bucketCounts(profiles, 'created_at', weeks);
+    const viewsByWeek     = hasViews ? bucketCounts(views, 'created_at', weeks) : null;
+    const listingsByWeek  = bucketCounts(listings, 'created_at', weeks);
+    const ordersByWeek    = bucketCounts(orders, 'created_at', weeks);
+    const feesByWeek      = bucketSum(orders, 'created_at', 'platform_fee', weeks);
+    const gmvByWeek       = bucketSum(orders, 'created_at', 'amount', weeks);
+
+    const thisWeek = { accounts: accountsByWeek[7], views: viewsByWeek ? viewsByWeek[7] : null, listings: listingsByWeek[7], orders: ordersByWeek[7] };
+    const lastWeek = { accounts: accountsByWeek[6], views: viewsByWeek ? viewsByWeek[6] : null, listings: listingsByWeek[6], orders: ordersByWeek[6] };
+    const totalRevenue = orders.reduce((s, o) => s + (Number(o.platform_fee) || 0), 0);
+    const totalGMV     = orders.reduce((s, o) => s + (Number(o.amount) || 0), 0);
+
+    // Summary stat cards
+    statsEl.innerHTML = `
+      <div class="growth-stat">
+        <div class="g-num">${totalProfilesRes.count ?? '—'}</div>
+        <div class="g-label">Total Users</div>
+        <div class="g-change">${changeLabel(thisWeek.accounts, lastWeek.accounts)}</div>
+      </div>
+      <div class="growth-stat">
+        <div class="g-num">${thisWeek.accounts}</div>
+        <div class="g-label">Signups This Week</div>
+        <div class="g-change">${changeLabel(thisWeek.accounts, lastWeek.accounts)}</div>
+      </div>
+      ${hasViews ? `
+      <div class="growth-stat">
+        <div class="g-num">${(viewsByWeek[7]).toLocaleString()}</div>
+        <div class="g-label">Visits This Week</div>
+        <div class="g-change">${changeLabel(viewsByWeek[7], viewsByWeek[6])}</div>
+      </div>` : `
+      <div class="growth-stat">
+        <div class="g-num">—</div>
+        <div class="g-label">Visits This Week</div>
+        <div class="g-change" style="font-size:0.72rem;">Run visit tracking SQL</div>
+      </div>`}
+      <div class="growth-stat">
+        <div class="g-num">${totalOrdersRes.count ?? '—'}</div>
+        <div class="g-label">Total Orders</div>
+        <div class="g-change">${changeLabel(thisWeek.orders, lastWeek.orders)}</div>
+      </div>
+      <div class="growth-stat">
+        <div class="g-num">$${Math.round(totalRevenue).toLocaleString()}</div>
+        <div class="g-label">Platform Revenue (8wk)</div>
+        <div class="g-change">$${Math.round(totalGMV).toLocaleString()} GMV</div>
+      </div>`;
+
+    // 4 charts
+    chartsEl.innerHTML = `
+      <div class="chart-card">
+        <h3>New Signups / Week</h3>
+        <div class="chart-total">${accountsByWeek.reduce((s,n)=>s+n,0)}</div>
+        <div class="chart-sub">over last 8 weeks</div>
+        ${renderBarChart(weeks, accountsByWeek, 'var(--text)')}
+      </div>
+      <div class="chart-card">
+        <h3>Page Views / Week</h3>
+        ${hasViews
+          ? `<div class="chart-total">${viewsByWeek.reduce((s,n)=>s+n,0).toLocaleString()}</div>
+             <div class="chart-sub">over last 8 weeks</div>
+             ${renderBarChart(weeks, viewsByWeek, 'var(--primary)')}`
+          : `<div class="visits-note">Run the page_views SQL in Supabase to enable visit tracking, then add the tracking snippet to your pages.</div>`
+        }
+      </div>
+      <div class="chart-card">
+        <h3>New Listings / Week</h3>
+        <div class="chart-total">${listingsByWeek.reduce((s,n)=>s+n,0)}</div>
+        <div class="chart-sub">real listings only, last 8 weeks</div>
+        ${renderBarChart(weeks, listingsByWeek, '#5b8dd9')}
+      </div>
+      <div class="chart-card">
+        <h3>New Orders / Week</h3>
+        <div class="chart-total">${ordersByWeek.reduce((s,n)=>s+n,0)}</div>
+        <div class="chart-sub">over last 8 weeks</div>
+        ${renderBarChart(weeks, ordersByWeek, '#3a9e3a')}
+      </div>`;
+
+    revenueEl.innerHTML = renderRevenueChart(weeks, feesByWeek, gmvByWeek);
   }
 
   async function loadStats() {
