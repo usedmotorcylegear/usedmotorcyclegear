@@ -451,21 +451,42 @@
             <th>Status</th>
             <th>Payout</th>
             <th>Date</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           ${data.map(o => `
-            <tr>
+            <tr id="order-row-${o.id}">
               <td><a href="listing.html?id=${o.listing_id}" style="font-weight:700; color:var(--text);">${o.listings?.title || 'Item'}</a></td>
               <td>$${Number(o.amount).toLocaleString()}</td>
               <td>$${Number(o.seller_payout).toLocaleString()}</td>
               <td><span class="badge badge-${o.status}">${o.status}</span></td>
               <td><span class="badge badge-${o.payout_status || 'pending'}">${o.payout_status || 'pending'}</span></td>
               <td style="color:var(--muted);">${new Date(o.created_at).toLocaleDateString()}</td>
+              <td>
+                <button class="action-btn btn-remove" onclick="deleteOrder('${o.id}', this)">Delete</button>
+                <div id="order-alert-${o.id}" class="admin-alert"></div>
+              </td>
             </tr>
           `).join('')}
         </tbody>
       </table>`;
+  }
+
+  async function deleteOrder(orderId, btn) {
+    if (!confirm('Permanently delete this order? This cannot be undone.')) return;
+    btn.disabled = true;
+    btn.textContent = 'Deleting...';
+    const { error } = await supabase.from('orders').delete().eq('id', orderId);
+    if (error) {
+      document.getElementById(`order-alert-${orderId}`).innerHTML = `<span style="color:var(--danger)">${error.message}</span>`;
+      btn.disabled = false;
+      btn.textContent = 'Delete';
+    } else {
+      const row = document.getElementById(`order-row-${orderId}`);
+      if (row) row.remove();
+      loadStats();
+    }
   }
 
   async function loadListings() {
