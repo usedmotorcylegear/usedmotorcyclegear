@@ -114,13 +114,34 @@
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
-  // Track page view (once per session per page)
+  // Analytics tracking
   (function() {
-    const page = location.pathname.split('/').pop().replace('.html','') || 'home';
-    if (sessionStorage.getItem('pv_'+page)) return;
-    sessionStorage.setItem('pv_'+page, '1');
-    const ref = document.referrer ? (() => { try { return new URL(document.referrer).hostname; } catch(e) { return 'direct'; } })() : 'direct';
-    supabase.from('page_views').insert({ page, referrer: ref });
+    const _pg = 'home';
+    let _sid = sessionStorage.getItem('_sid');
+    if (!_sid) { _sid = Math.random().toString(36).slice(2)+Date.now().toString(36); sessionStorage.setItem('_sid',_sid); }
+    if (sessionStorage.getItem('_pv_'+_pg)) return;
+    sessionStorage.setItem('_pv_'+_pg,'1');
+    const _ref = document.referrer
+      ? (()=>{ try{return new URL(document.referrer).hostname;}catch(e){return 'unknown';} })()
+      : 'direct';
+    const _dev = window.innerWidth<=768?'mobile':window.innerWidth<=1024?'tablet':'desktop';
+    const _t0 = Date.now();
+    let _pvId = null;
+    supabase.from('page_views').insert({
+      page:_pg, referrer:_ref, session_id:_sid,
+      device:_dev, screen_w:window.innerWidth,
+      path:location.pathname+location.search
+    }).select('id').single().then(({data})=>{ if(data) _pvId=data.id; });
+    const _flush = ()=>{
+      if(!_pvId) return;
+      fetch(SUPABASE_URL+'/rest/v1/page_views?id=eq.'+_pvId, {
+        method:'PATCH', keepalive:true,
+        headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY,'Prefer':'return=minimal'},
+        body:JSON.stringify({duration_seconds:Math.round((Date.now()-_t0)/1000)})
+      });
+    };
+    document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') _flush(); });
+    window.addEventListener('pagehide',_flush);
   })();
 
   loadRecentListings();

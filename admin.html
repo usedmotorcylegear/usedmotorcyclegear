@@ -127,6 +127,7 @@
     <div id="growth-stats-row" class="growth-stat-row"></div>
     <div id="growth-charts-grid" class="growth-grid"></div>
     <div id="growth-revenue-chart"></div>
+    <div id="growth-analytics"></div>
   </div>
 
 </div>
@@ -244,6 +245,130 @@
       </div>`;
   }
 
+  function fmtDur(secs) {
+    if (!secs || secs <= 0) return '—';
+    if (secs < 60) return secs + 's';
+    return Math.floor(secs/60) + 'm ' + (secs % 60) + 's';
+  }
+
+  function renderAnalytics(views) {
+    const el = document.getElementById('growth-analytics');
+    if (!el) return;
+    if (!views || views.length === 0) {
+      el.innerHTML = '<div style="color:var(--muted);font-size:0.85rem;padding:1.5rem 0;">No visitor data yet for the last 30 days.</div>';
+      return;
+    }
+
+    // Page aggregation
+    const pageCounts = {}, pageDurs = {}, pageSess = {};
+    views.forEach(v => {
+      const p = v.page || '/';
+      pageCounts[p] = (pageCounts[p]||0)+1;
+      if (v.duration_seconds > 0) { pageDurs[p] = pageDurs[p]||[]; pageDurs[p].push(v.duration_seconds); }
+      if (v.session_id) { pageSess[p] = pageSess[p]||new Set(); pageSess[p].add(v.session_id); }
+    });
+    const topPages = Object.entries(pageCounts).sort((a,b)=>b[1]-a[1]).slice(0,10);
+
+    // Source aggregation
+    const srcCounts = {}, srcSess = {};
+    views.forEach(v => {
+      const s = v.referrer || 'direct';
+      srcCounts[s] = (srcCounts[s]||0)+1;
+      if (v.session_id) { srcSess[s] = srcSess[s]||new Set(); srcSess[s].add(v.session_id); }
+    });
+    const topSrcs = Object.entries(srcCounts).sort((a,b)=>b[1]-a[1]).slice(0,10);
+    const total = views.length;
+
+    // Device
+    const dev = {mobile:0,tablet:0,desktop:0};
+    views.forEach(v => { if (v.device && dev[v.device] !== undefined) dev[v.device]++; });
+    const devColors = {mobile:'var(--primary)',tablet:'#5b8dd9',desktop:'var(--text)'};
+
+    // Summary
+    const uniqSess = new Set(views.filter(v=>v.session_id).map(v=>v.session_id)).size;
+    const durViews = views.filter(v=>v.duration_seconds > 0);
+    const avgDur = durViews.length ? Math.round(durViews.reduce((s,v)=>s+v.duration_seconds,0)/durViews.length) : null;
+
+    el.innerHTML = `
+      <div style="margin:2rem 0 1.25rem;padding-top:1.75rem;border-top:2px solid var(--text);">
+        <div style="font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin-bottom:1.25rem;">Visitor Analytics — Last 30 Days</div>
+
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem;">
+          <div class="growth-stat" style="flex:1;min-width:110px;"><div class="g-num">${total.toLocaleString()}</div><div class="g-label">Page Views</div></div>
+          <div class="growth-stat" style="flex:1;min-width:110px;"><div class="g-num">${uniqSess.toLocaleString()}</div><div class="g-label">Sessions</div></div>
+          <div class="growth-stat" style="flex:1;min-width:110px;"><div class="g-num">${fmtDur(avgDur)}</div><div class="g-label">Avg Time on Page</div></div>
+          <div class="growth-stat" style="flex:1;min-width:110px;"><div class="g-num">${dev.mobile}</div><div class="g-label">Mobile Visits</div><div class="g-change" style="font-size:0.72rem;color:var(--muted);">${total?Math.round(dev.mobile/total*100):0}% of visits</div></div>
+          <div class="growth-stat" style="flex:1;min-width:110px;"><div class="g-num">${dev.desktop}</div><div class="g-label">Desktop Visits</div><div class="g-change" style="font-size:0.72rem;color:var(--muted);">${total?Math.round(dev.desktop/total*100):0}% of visits</div></div>
+        </div>
+
+        <div class="growth-grid" style="margin-bottom:1.25rem;">
+          <div class="chart-card" style="overflow:auto;">
+            <h3>Top Pages</h3>
+            <table class="admin-table" style="font-size:0.82rem;">
+              <thead><tr><th>Page</th><th>Views</th><th>Sessions</th><th>Avg Time</th></tr></thead>
+              <tbody>${topPages.map(([p,c]) => {
+                const ds = pageDurs[p]||[];
+                const avg = ds.length ? Math.round(ds.reduce((s,d)=>s+d,0)/ds.length) : null;
+                return `<tr><td style="font-weight:700;">${p}</td><td>${c}</td><td>${pageSess[p]?.size||'—'}</td><td>${fmtDur(avg)}</td></tr>`;
+              }).join('')}</tbody>
+            </table>
+          </div>
+          <div class="chart-card" style="overflow:auto;">
+            <h3>Traffic Sources</h3>
+            <table class="admin-table" style="font-size:0.82rem;">
+              <thead><tr><th>Source</th><th>Views</th><th>Sessions</th><th>Share</th></tr></thead>
+              <tbody>${topSrcs.map(([s,c]) => {
+                const pct = Math.round(c/total*100);
+                return `<tr>
+                  <td style="font-weight:700;">${s}</td>
+                  <td>${c}</td>
+                  <td>${srcSess[s]?.size||'—'}</td>
+                  <td><div style="display:flex;align-items:center;gap:0.5rem;"><div style="height:6px;width:${Math.min(pct,100)}px;background:var(--primary);border-radius:3px;flex-shrink:0;"></div>${pct}%</div></td>
+                </tr>`;
+              }).join('')}</tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="chart-card" style="margin-bottom:1.25rem;">
+          <h3>Device Breakdown</h3>
+          <div style="display:flex;gap:2.5rem;align-items:center;flex-wrap:wrap;">
+            ${Object.entries(dev).map(([d,n]) => `
+              <div style="text-align:center;">
+                <div style="font-size:1.75rem;font-weight:900;letter-spacing:-0.03em;">${n}</div>
+                <div style="font-size:0.7rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-top:0.2rem;">${d}</div>
+                <div style="font-size:0.78rem;color:var(--muted);margin-top:0.1rem;">${total?Math.round(n/total*100):0}%</div>
+              </div>`).join('')}
+            <div style="flex:1;min-width:180px;margin-left:0.5rem;">
+              ${Object.entries(dev).map(([d,n]) => {
+                const pct = total ? Math.round(n/total*100) : 0;
+                return `<div style="margin-bottom:0.6rem;">
+                  <div style="display:flex;justify-content:space-between;font-size:0.78rem;margin-bottom:0.25rem;"><span style="font-weight:600;">${d}</span><span style="color:var(--muted);">${pct}%</span></div>
+                  <div style="height:8px;background:var(--border);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${pct}%;background:${devColors[d]};border-radius:4px;"></div></div>
+                </div>`;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-card" style="overflow:auto;">
+          <h3>Recent Visitor Activity</h3>
+          <table class="admin-table" style="font-size:0.8rem;">
+            <thead><tr><th>Page</th><th>Source</th><th>Device</th><th>Time on Page</th><th>When</th></tr></thead>
+            <tbody>${views.slice(0,100).map(v => `
+              <tr>
+                <td style="font-weight:700;">${v.page||'/'}</td>
+                <td style="color:var(--muted);">${v.referrer||'direct'}</td>
+                <td style="color:var(--muted);">${v.device||'—'}</td>
+                <td>${fmtDur(v.duration_seconds)}</td>
+                <td style="color:var(--muted);white-space:nowrap;font-size:0.75rem;">${new Date(v.created_at).toLocaleString()}</td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+  }
+
   async function loadGrowth() {
     const statsEl = document.getElementById('growth-stats-row');
     const chartsEl = document.getElementById('growth-charts-grid');
@@ -255,13 +380,15 @@
     const weeks = getLast8Weeks();
     const cutoff = new Date(weeks[0]).toISOString();
 
-    const [profilesRes, viewsRes, listingsRes, ordersRes, totalProfilesRes, totalOrdersRes] = await Promise.all([
+    const analyticsFrom = new Date(Date.now() - 30*24*60*60*1000).toISOString();
+    const [profilesRes, viewsRes, listingsRes, ordersRes, totalProfilesRes, totalOrdersRes, analyticsRes] = await Promise.all([
       supabase.from('profiles').select('created_at').gte('created_at', cutoff).eq('is_admin', false),
-      supabase.from('page_views').select('created_at, page').gte('created_at', cutoff),
+      supabase.from('page_views').select('created_at, page, referrer, duration_seconds, device, session_id').gte('created_at', cutoff),
       supabase.from('listings').select('created_at').gte('created_at', cutoff).eq('is_dummy', false),
       supabase.from('orders').select('created_at, amount, platform_fee').gte('created_at', cutoff),
       supabase.from('profiles').select('id', { count: 'exact' }).eq('is_admin', false),
       supabase.from('orders').select('id', { count: 'exact' }),
+      supabase.from('page_views').select('page, referrer, duration_seconds, device, session_id, created_at').gte('created_at', analyticsFrom).order('created_at', { ascending: false }).limit(1000),
     ]);
 
     const profiles = profilesRes.data || [];
@@ -347,6 +474,7 @@
       </div>`;
 
     revenueEl.innerHTML = renderRevenueChart(weeks, feesByWeek, gmvByWeek);
+    renderAnalytics(analyticsRes.data || []);
   }
 
   async function loadStats() {
