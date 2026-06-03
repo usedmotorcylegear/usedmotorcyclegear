@@ -152,14 +152,13 @@
       : 'direct';
     const _dev = window.innerWidth<=768?'mobile':window.innerWidth<=1024?'tablet':'desktop';
     const _t0 = Date.now();
-    let _pvId = null;
+    const _pvId = (crypto&&crypto.randomUUID)?crypto.randomUUID():'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c=='x'?r:(r&0x3|0x8)).toString(16);});
     supabase.from('page_views').insert({
-      page:_pg, referrer:_ref, session_id:_sid,
+      id:_pvId, page:_pg, referrer:_ref, session_id:_sid,
       device:_dev, screen_w:window.innerWidth,
       path:location.pathname+location.search
-    }).select('id').single().then(({data})=>{ if(data) _pvId=data.id; });
+    });
     const _flush = ()=>{
-      if(!_pvId) return;
       fetch(SUPABASE_URL+'/rest/v1/page_views?id=eq.'+_pvId, {
         method:'PATCH', keepalive:true,
         headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY,'Prefer':'return=minimal'},
