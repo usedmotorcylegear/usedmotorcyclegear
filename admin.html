@@ -124,8 +124,9 @@
 
   <!-- GROWTH -->
   <div class="admin-tab-panel" id="tab-growth">
-    <div style="display:flex; justify-content:flex-end; margin-bottom:1rem;">
-      <button class="action-btn btn-release" onclick="loadGrowth()" id="growth-refresh-btn">↻ Refresh</button>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+      <button class="action-btn" id="track-toggle-btn" onclick="toggleTracking()" style="font-size:0.78rem; padding:0.3rem 0.7rem; border-radius:4px; cursor:pointer; font-weight:600; border:1px solid var(--border); background:none;"></button>
+      <button class="action-btn btn-release" onclick="loadGrowth()">↻ Refresh</button>
     </div>
     <div id="growth-stats-row" class="growth-stat-row"></div>
     <div id="growth-charts-grid" class="growth-grid"></div>
@@ -144,6 +145,24 @@
 <script src="js/config.js"></script>
 <script src="js/auth.js"></script>
 <script>
+  function updateTrackBtn() {
+    const btn = document.getElementById('track-toggle-btn');
+    if (!btn) return;
+    const excluded = localStorage.getItem('_no_track');
+    btn.textContent = excluded ? '✅ Your visits excluded' : '🚫 Exclude my visits';
+    btn.style.borderColor = excluded ? 'var(--success)' : 'var(--border)';
+    btn.style.color = excluded ? 'var(--success)' : 'var(--muted)';
+  }
+
+  function toggleTracking() {
+    if (localStorage.getItem('_no_track')) {
+      localStorage.removeItem('_no_track');
+    } else {
+      localStorage.setItem('_no_track', '1');
+    }
+    updateTrackBtn();
+  }
+
   async function init() {
     const user = await requireAuth();
 
@@ -156,6 +175,7 @@
 
     document.getElementById('admin-email').textContent = user.email;
 
+    updateTrackBtn();
     loadStats();
     loadDisputes();
   }

@@ -116,6 +116,7 @@
 
   // Analytics tracking
   (function() {
+    if (localStorage.getItem('_no_track')) return;
     const _pg = 'home';
     let _sid = sessionStorage.getItem('_sid');
     if (!_sid) { _sid = Math.random().toString(36).slice(2)+Date.now().toString(36); sessionStorage.setItem('_sid',_sid); }
