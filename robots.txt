@@ -1,11 +1,18 @@
 User-agent: *
 Allow: /
+
+# Keep private/functional pages out of the index
 Disallow: /admin.html
+Disallow: /auth.html
 Disallow: /account.html
-Disallow: /orders.html
 Disallow: /checkout.html
 Disallow: /inbox.html
+Disallow: /orders.html
+Disallow: /post.html
 Disallow: /messages.html
 Disallow: /success.html
 
-Sitemap: https://usedmotorcyclegear.com/sitemap.xml
+# Block browse with query params — use dedicated category pages instead
+Disallow: /browse.html?
+
+Sitemap: https://www.usedmotorcyclegear.com/sitemap.xml
