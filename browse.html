@@ -157,7 +157,7 @@
       id:_pvId, page:_pg, referrer:_ref, session_id:_sid,
       device:_dev, screen_w:window.innerWidth,
       path:location.pathname+location.search
-    });
+    }).then(() => {});
     const _flush = ()=>{
       fetch(SUPABASE_URL+'/rest/v1/page_views?id=eq.'+_pvId, {
         method:'PATCH', keepalive:true,
