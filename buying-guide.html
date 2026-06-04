@@ -210,7 +210,8 @@
     const _ref = document.referrer?(()=>{try{return new URL(document.referrer).hostname;}catch(e){return 'unknown';}})():'direct';
     const _dev = window.innerWidth<=768?'mobile':window.innerWidth<=1024?'tablet':'desktop'; const _t0 = Date.now();
     const _pvId = (crypto&&crypto.randomUUID)?crypto.randomUUID():'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c=='x'?r:(r&0x3|0x8)).toString(16);});
-    supabase.from('page_views').insert({id:_pvId,page:_pg,referrer:_ref,session_id:_sid,device:_dev,screen_w:window.innerWidth,path:location.pathname+location.search}).then(()=>{});
+    const _ins=(g)=>supabase.from('page_views').insert({id:_pvId,page:_pg,referrer:_ref,session_id:_sid,device:_dev,screen_w:window.innerWidth,path:location.pathname+location.search,ip:g.ip||null,city:g.city||null,region:g.region||null,country:g.country||null}).then(()=>{});
+    const _cg=sessionStorage.getItem('_geo'); if(_cg){_ins(JSON.parse(_cg));} else {fetch('https://ipapi.co/json/').then(r=>r.json()).then(d=>{const g={ip:d.ip,city:d.city,region:d.region,country:d.country_name};sessionStorage.setItem('_geo',JSON.stringify(g));_ins(g);}).catch(()=>_ins({}));}
     const _flush=()=>{fetch(SUPABASE_URL+'/rest/v1/page_views?id=eq.'+_pvId,{method:'PATCH',keepalive:true,headers:{'Content-Type':'application/json','apikey':SUPABASE_ANON_KEY,'Authorization':'Bearer '+SUPABASE_ANON_KEY,'Prefer':'return=minimal'},body:JSON.stringify({duration_seconds:Math.round((Date.now()-_t0)/1000)})});};
     document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')_flush();}); window.addEventListener('pagehide',_flush);
   })();

@@ -302,6 +302,17 @@
     const topSrcs = Object.entries(srcCounts).sort((a,b)=>b[1]-a[1]).slice(0,10);
     const total = views.length;
 
+    // Location aggregation
+    const locCounts = {}, locSess = {};
+    views.forEach(v => {
+      if (!v.city && !v.region && !v.country) return;
+      const loc = [v.city, v.region, v.country].filter(Boolean).join(', ');
+      locCounts[loc] = (locCounts[loc]||0)+1;
+      if (v.session_id) { locSess[loc] = locSess[loc]||new Set(); locSess[loc].add(v.session_id); }
+    });
+    const topLocs = Object.entries(locCounts).sort((a,b)=>b[1]-a[1]).slice(0,15);
+    const geoTotal = Object.values(locCounts).reduce((s,n)=>s+n,0);
+
     // Device
     const dev = {mobile:0,tablet:0,desktop:0};
     views.forEach(v => { if (v.device && dev[v.device] !== undefined) dev[v.device]++; });
@@ -353,6 +364,22 @@
           </div>
         </div>
 
+        <div class="chart-card" style="overflow:auto;margin-bottom:1.25rem;">
+          <h3>Top Locations</h3>
+          ${topLocs.length ? `<table class="admin-table" style="font-size:0.82rem;">
+            <thead><tr><th>Location</th><th>Views</th><th>Sessions</th><th>Share</th></tr></thead>
+            <tbody>${topLocs.map(([loc,c]) => {
+              const pct = geoTotal ? Math.round(c/geoTotal*100) : 0;
+              return `<tr>
+                <td style="font-weight:700;">${loc}</td>
+                <td>${c}</td>
+                <td>${locSess[loc]?.size||'—'}</td>
+                <td><div style="display:flex;align-items:center;gap:0.5rem;"><div style="height:6px;width:${Math.min(pct,100)}px;background:var(--primary);border-radius:3px;flex-shrink:0;"></div>${pct}%</div></td>
+              </tr>`;
+            }).join('')}</tbody>
+          </table>` : `<div style="color:var(--muted);font-size:0.82rem;padding:0.5rem 0;">No location data yet. New visits will show city / state / country once the geolocation tracking is live.</div>`}
+        </div>
+
         <div class="chart-card" style="margin-bottom:1.25rem;">
           <h3>Device Breakdown</h3>
           <div style="display:flex;gap:2.5rem;align-items:center;flex-wrap:wrap;">
@@ -377,15 +404,19 @@
         <div class="chart-card" style="overflow:auto;">
           <h3>Recent Visitor Activity</h3>
           <table class="admin-table" style="font-size:0.8rem;">
-            <thead><tr><th>Page</th><th>Source</th><th>Device</th><th>Time on Page</th><th>When</th></tr></thead>
-            <tbody>${views.slice(0,100).map(v => `
+            <thead><tr><th>Page</th><th>Location</th><th>Source</th><th>Device</th><th>Time on Page</th><th>When</th></tr></thead>
+            <tbody>${views.slice(0,100).map(v => {
+              const loc = [v.city, v.region, v.country].filter(Boolean).join(', ');
+              return `
               <tr>
                 <td style="font-weight:700;">${v.page||'/'}</td>
+                <td style="color:var(--muted);">${loc||'—'}${v.ip?`<div style="font-size:0.68rem;opacity:0.7;">${v.ip}</div>`:''}</td>
                 <td style="color:var(--muted);">${v.referrer||'direct'}</td>
                 <td style="color:var(--muted);">${v.device||'—'}</td>
                 <td>${fmtDur(v.duration_seconds)}</td>
                 <td style="color:var(--muted);white-space:nowrap;font-size:0.75rem;">${new Date(v.created_at).toLocaleString()}</td>
-              </tr>`).join('')}
+              </tr>`;
+            }).join('')}
             </tbody>
           </table>
         </div>
@@ -411,7 +442,7 @@
       supabase.from('orders').select('created_at, amount, platform_fee').gte('created_at', cutoff),
       supabase.from('profiles').select('id', { count: 'exact' }).eq('is_admin', false),
       supabase.from('orders').select('id', { count: 'exact' }),
-      supabase.from('page_views').select('page, referrer, duration_seconds, device, session_id, created_at').gte('created_at', analyticsFrom).order('created_at', { ascending: false }).limit(1000),
+      supabase.from('page_views').select('page, referrer, duration_seconds, device, session_id, created_at, city, region, country, ip').gte('created_at', analyticsFrom).order('created_at', { ascending: false }).limit(1000),
     ]);
 
     const profiles = profilesRes.data || [];
