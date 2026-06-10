@@ -45,6 +45,9 @@
 
 <nav>
   <a class="nav-logo" href="index.html">used<span>motorcyclegear</span>.com</a>
+  <form class="nav-search" role="search" onsubmit="event.preventDefault();var q=this.querySelector('input').value.trim();window.location.href='browse.html'+(q?'?q='+encodeURIComponent(q):'');">
+    <input type="search" placeholder="Search jackets, gloves, boots, brands..." aria-label="Search listings" />
+  </form>
   <ul class="nav-links">
     <li><a href="browse.html">Browse</a></li>
     <li><a href="how-it-works.html">How It Works</a></li>

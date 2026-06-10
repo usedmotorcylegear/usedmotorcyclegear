@@ -4,7 +4,7 @@
     {
       "name": "usedmotorcyclegear",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["serve", "-p", "3000", "."],
+      "runtimeArgs": ["serve", "--no-clipboard", "-p", "3000", "."],
       "port": 3000
     }
   ]

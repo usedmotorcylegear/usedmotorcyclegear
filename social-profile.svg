@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="500" height="500">
+  <!-- Background -->
+  <rect width="500" height="500" fill="#1a1814"/>
+
+  <!-- Thin orange ring — stays inside the circle crop on IG/TikTok -->
+  <circle cx="250" cy="250" r="232" fill="none" stroke="#d95f00" stroke-width="7"/>
+
+  <!-- Orange "m" — centered, same weight as site logo -->
+  <text
+    x="250"
+    y="323"
+    font-family="Arial Black, Arial, sans-serif"
+    font-size="282"
+    font-weight="900"
+    fill="#d95f00"
+    text-anchor="middle"
+  >m</text>
+</svg>
