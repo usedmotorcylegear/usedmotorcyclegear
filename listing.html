@@ -6,7 +6,7 @@
   <title>Listing — Used Motorcycle Gear</title>
   <meta name="description" content="Used motorcycle gear for sale on UsedMotorcycleGear.com — certified never crashed." />
   <meta property="og:type" content="product" />
-  <meta property="og:image" content="https://usedmotorcyclegear.com/og-image.jpg" />
+  <meta property="og:image" content="https://www.usedmotorcyclegear.com/og-image.jpg" />
   <meta name="twitter:card" content="summary_large_image" />
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="css/style.css" />
@@ -101,8 +101,8 @@
     document.title = `${listing.title} — Used Motorcycle Gear`;
 
     // Dynamic SEO meta tags
-    const listingUrl = `https://usedmotorcyclegear.com/listing.html?id=${listing.id}`;
-    const listingImg = listing.images?.[0] || 'https://usedmotorcyclegear.com/og-image.jpg';
+    const listingUrl = `https://www.usedmotorcyclegear.com/listing.html?id=${listing.id}`;
+    const listingImg = listing.images?.[0] || 'https://www.usedmotorcyclegear.com/og-image.jpg';
     const listingDesc = `${listing.condition} ${listing.category} — $${Number(listing.price).toLocaleString()}. ${(listing.description || '').slice(0, 120)}`;
 
     document.querySelector('meta[name="description"]')?.setAttribute('content', listingDesc);
@@ -141,10 +141,13 @@
         itemCondition: listing.condition === 'New' ? 'https://schema.org/NewCondition' : 'https://schema.org/UsedCondition',
       },
     };
-    const script = document.createElement('script');
-    script.type = 'application/ld+json';
-    script.textContent = JSON.stringify(jsonLd);
-    document.head.appendChild(script);
+    // Skip if the server already injected a Product JSON-LD block (avoids duplicates).
+    if (!document.querySelector('script[type="application/ld+json"]')) {
+      const script = document.createElement('script');
+      script.type = 'application/ld+json';
+      script.textContent = JSON.stringify(jsonLd);
+      document.head.appendChild(script);
+    }
 
     const images = listing.images && listing.images.length > 0 ? listing.images : [];
     const mainImg = images[0] || null;
@@ -164,7 +167,7 @@
         <div class="ldg-images">
           <div class="listing-images">
             ${mainImg
-              ? `<img id="main-img" src="${mainImg}" alt="${safeTitle}" />`
+              ? `<img id="main-img" src="${mainImg}" alt="Used ${safeCondition} ${safeCategory} for sale — ${safeTitle}" />`
               : `<div style="width:100%;height:300px;background:var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:4rem;">🏍️</div>`}
             ${images.length > 1 ? `
               <div class="thumb-row">

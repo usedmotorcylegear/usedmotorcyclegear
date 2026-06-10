@@ -1,0 +1,11 @@
+{
+  "functions": {
+    "api/listing.js": {
+      "includeFiles": "listing.html"
+    }
+  },
+  "routes": [
+    { "src": "/listing.html", "dest": "/api/listing" },
+    { "handle": "filesystem" }
+  ]
+}

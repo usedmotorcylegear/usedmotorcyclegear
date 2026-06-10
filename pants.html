@@ -146,7 +146,7 @@
     if (error) { grid.innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>Error loading listings.</p></div>'; return; }
     countEl.textContent = `${data.length} listing${data.length !== 1 ? 's' : ''} found`;
     if (data.length === 0) { grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="icon">🔍</div><p>No pants listed yet.</p><a href="post.html" class="btn btn-primary" style="margin-top:1rem;">Sell your riding pants</a></div>`; return; }
-    grid.innerHTML = data.map(l => `<a href="listing.html?id=${l.id}" class="listing-card">${l.images&&l.images.length>0?`<img src="${l.images[0]}" alt="${escapeHtml(l.title)}" loading="lazy" />`:'<div class="placeholder-img">🏍️</div>'}<div class="listing-info"><div class="listing-title">${escapeHtml(l.title)}</div><div class="listing-price">$${Number(l.price).toLocaleString()}</div><div class="listing-meta">${escapeHtml(l.condition)} &middot; ${escapeHtml(l.location||'No location')}</div></div></a>`).join('');
+    grid.innerHTML = data.map(l => `<a href="listing.html?id=${l.id}" class="listing-card">${l.images&&l.images.length>0?`<img src="${l.images[0]}" alt="Used ${escapeHtml(l.category)} for sale — ${escapeHtml(l.title)}" loading="lazy" />`:'<div class="placeholder-img">🏍️</div>'}<div class="listing-info"><div class="listing-title">${escapeHtml(l.title)}</div><div class="listing-price">$${Number(l.price).toLocaleString()}</div><div class="listing-meta">${escapeHtml(l.condition)} &middot; ${escapeHtml(l.location||'No location')}</div></div></a>`).join('');
   }
   sortFilter.addEventListener('change', loadListings);
   searchInput.addEventListener('input', () => { clearTimeout(debounceTimer); debounceTimer = setTimeout(loadListings, 350); });

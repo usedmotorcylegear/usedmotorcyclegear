@@ -159,7 +159,7 @@
     }
     grid.innerHTML = data.map(l => `
       <a href="listing.html?id=${l.id}" class="listing-card">
-        ${l.images&&l.images.length>0?`<img src="${l.images[0]}" alt="${escapeHtml(l.title)}" loading="lazy" />`:'<div class="placeholder-img">🏍️</div>'}
+        ${l.images&&l.images.length>0?`<img src="${l.images[0]}" alt="Used ${escapeHtml(l.category)} for sale — ${escapeHtml(l.title)}" loading="lazy" />`:'<div class="placeholder-img">🏍️</div>'}
         <div class="listing-info">
           <div class="listing-title">${escapeHtml(l.title)}</div>
           <div class="listing-price">$${Number(l.price).toLocaleString()}</div>
