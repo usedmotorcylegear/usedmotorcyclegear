@@ -71,8 +71,10 @@
 <script>
   const params = new URLSearchParams(window.location.search);
   const categoryParam = params.get('category') || '';
+  const searchParam = params.get('q') || '';
   const sortFilter = document.getElementById('sort-filter');
   const searchInput = document.getElementById('search');
+  if (searchParam) searchInput.value = searchParam;
 
   let debounceTimer;
 

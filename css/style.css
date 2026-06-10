@@ -45,6 +45,44 @@ nav {
 
 .nav-logo span { color: var(--primary); }
 
+.nav-search {
+  flex: 1;
+  max-width: 480px;
+  margin: 0 2.5rem;
+  display: flex;
+  position: relative;
+}
+
+.nav-search input {
+  width: 100%;
+  padding: 0.65rem 1rem 0.65rem 2.5rem;
+  font-size: 0.95rem;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.nav-search input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(217, 95, 0, 0.12);
+}
+
+.nav-search input::placeholder { color: var(--muted); }
+
+.nav-search::before {
+  content: "🔍";
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.85rem;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
 .nav-links {
   display: flex;
   align-items: center;
@@ -399,6 +437,7 @@ select.filter-select:focus { outline: none; border-color: var(--text); }
   /* NAV */
   nav { padding: 0 1.25rem; height: 60px; overflow: visible; }
   .nav-hamburger { display: flex; }
+  .nav-search { display: none; }
   .nav-links {
     display: none;
     position: absolute;
